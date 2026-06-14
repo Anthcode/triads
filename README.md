@@ -40,7 +40,11 @@ Obsługiwane są wyłącznie triady zamknięte, bez drop-2, drop-3 i bez open vo
 
 ## Audio i interakcja
 
-Warstwa audio korzysta z Web Audio i syntezy typu Karplus-Strong, więc aplikacja nie wymaga sampli do podstawowego działania. Można odtwarzać pojedyncze voicingi, całą progresję, pętlę ćwiczeniową, a także korzystać z rytmów takich jak całe nuty, rockowy strumming i balladowe arpeggio.
+Warstwa audio korzysta z Web Audio API, czyli przeglądarkowego silnika DSP do tworzenia grafu audio, planowania zdarzeń w czasie i kontroli parametrów takich jak głośność, panorama czy pogłos. W praktyce aplikacja nie odtwarza gotowych plików dźwiękowych, tylko sama syntetyzuje brzmienie i precyzyjnie ustawia moment startu każdego dźwięku, uderzenia metronomu oraz kolejnych akordów w progresji.
+
+Podstawowe brzmienie struny powstaje przez syntezę typu Karplus-Strong. To klasyczna technika modelowania fizycznego, w której krótki impuls szumu trafia do bardzo krótkiej pętli opóźniającej z tłumieniem i prostym filtrowaniem. Taki układ zachowuje się podobnie do szarpniętej struny: początek jest jasny i perkusyjny, a potem dźwięk naturalnie wygasa. W tym projekcie daje to lekki, gitaropodobny „pluck” bez użycia sampli, a dodatkowy convolver dokłada syntetyczny pogłos, żeby brzmienie nie było całkowicie suche.
+
+Można odtwarzać pojedyncze voicingi, całą progresję, pętlę ćwiczeniową, a także korzystać z rytmów takich jak całe nuty, rockowy strumming i balladowe arpeggio.
 
 Interfejs pokazuje nie tylko karty voicingów i tabulatury, ale też animowany gryf sceniczny, podświetlenie aktualnie granego akordu oraz interaktywny gryf do wskazywania nut. To sprawia, że aplikacja działa jednocześnie jako pomoc teoretyczna, ćwiczeniówka i szybki proof-of-concept muzycznego narzędzia pisanego z AI-pair programmerem.
 
