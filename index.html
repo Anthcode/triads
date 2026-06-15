@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Triady â€” Generator triad i progresji gitarowych</title>
+<title>Triady — Generator triad i progresji gitarowych</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Fira+Code:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -39,7 +39,7 @@ body {
   overflow-x: hidden;
 }
 
-/* â”€â”€â”€ NOISE TEXTURE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── NOISE TEXTURE ─────────────────────────────────────────── */
 body::before {
   content: '';
   position: fixed;
@@ -51,7 +51,7 @@ body::before {
   background-size: 256px 256px;
 }
 
-/* â”€â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── HERO ──────────────────────────────────────────────────── */
 .hero {
   position: relative;
   min-height: 100vh;
@@ -236,7 +236,7 @@ body::before {
   50% { transform: scaleY(1); transform-origin: top; }
 }
 
-/* â”€â”€â”€ SEPARATOR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── SEPARATOR ─────────────────────────────────────────────── */
 .sep {
   width: 100%;
   height: 1px;
@@ -256,7 +256,7 @@ body::before {
   box-shadow: 0 0 12px var(--amber);
 }
 
-/* â”€â”€â”€ PITCH SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── PITCH SECTION ─────────────────────────────────────────── */
 .pitch {
   position: relative;
   z-index: 2;
@@ -304,7 +304,7 @@ body::before {
   max-width: 44ch;
 }
 
-/* â”€â”€â”€ FRETBOARD VISUAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── FRETBOARD VISUAL ──────────────────────────────────────── */
 .fret-visual {
   position: relative;
 }
@@ -341,7 +341,7 @@ body::before {
   margin-top: 4px;
 }
 
-/* â”€â”€â”€ FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── FEATURES ──────────────────────────────────────────────── */
 .features-section {
   position: relative;
   z-index: 2;
@@ -457,7 +457,7 @@ body::before {
   margin-top: 16px;
 }
 
-/* â”€â”€â”€ PROGRESSION DEMO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── PROGRESSION DEMO ──────────────────────────────────────── */
 .demo-section {
   position: relative;
   z-index: 2;
@@ -537,7 +537,7 @@ body::before {
 .chip:hover { border-color: var(--amber); color: var(--amber); }
 .chip.highlight { color: var(--amber); border-color: rgba(232,163,60,.4); }
 
-/* â”€â”€â”€ AUDIO SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── AUDIO SECTION ─────────────────────────────────────────── */
 .audio-section {
   position: relative;
   z-index: 2;
@@ -610,7 +610,7 @@ body::before {
   letter-spacing: .04em;
 }
 
-/* â”€â”€â”€ CTA SECTION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── CTA SECTION ───────────────────────────────────────────── */
 .cta-section {
   position: relative;
   z-index: 2;
@@ -653,7 +653,7 @@ body::before {
   position: relative;
 }
 
-/* â”€â”€â”€ FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── FOOTER ────────────────────────────────────────────────── */
 footer {
   position: relative;
   z-index: 2;
@@ -683,7 +683,7 @@ footer {
   letter-spacing: .06em;
 }
 
-/* â”€â”€â”€ ANIMATIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── ANIMATIONS ────────────────────────────────────────────── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -704,13 +704,13 @@ footer {
   transform: none;
 }
 
-/* â”€â”€â”€ FRETBOARD SVG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── FRETBOARD SVG ─────────────────────────────────────────── */
 .fret-inline {
   display: block;
   width: 100%;
 }
 
-/* â”€â”€â”€ STATS ROW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ─── STATS ROW ─────────────────────────────────────────────── */
 .stats-row {
   position: relative;
   z-index: 2;
@@ -752,18 +752,18 @@ footer {
 </head>
 <body>
 
-<!-- â”€â”€â”€ HERO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ─── HERO ──────────────────────────────────────────────────── -->
 <section class="hero">
   <canvas id="hero-canvas"></canvas>
 
   <div class="hero-content">
-    <span class="eyebrow">Generator triad gitarowych Â· minimal voice leading Â· Web Audio</span>
+    <span class="eyebrow">Generator triad gitarowych · minimal voice leading · Web Audio</span>
     <h1 class="hero-title">Tri<em>ady</em></h1>
-    <p class="hero-subtitle">ZamkniÄ™te triady na gryfie, diatonika tonacji i inteligentne progresje&nbsp;â€” wszystko w jednym pliku, bez zaleĹĽnoĹ›ci.</p>
+    <p class="hero-subtitle">Zamknięte triady na gryfie, diatonika tonacji i inteligentne progresje&nbsp;— wszystko w jednym pliku, bez zależności.</p>
     <div class="hero-actions">
       <a href="app.html" class="btn-primary">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="3,2 13,8 3,14"/></svg>
-        OtwĂłrz aplikacjÄ™
+        Otwórz aplikację
       </a>
       <a href="https://github.com/rado-irla/triads" class="btn-ghost" target="_blank" rel="noopener">
         <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -791,7 +791,7 @@ footer {
 
 <div class="sep"><div class="sep-dot"></div></div>
 
-<!-- â”€â”€â”€ STATS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ─── STATS ─────────────────────────────────────────────────── -->
 <div class="stats-row">
   <div class="stat reveal">
     <div class="stat-number">166</div>
@@ -803,21 +803,21 @@ footer {
   </div>
   <div class="stat reveal" style="transition-delay:.2s">
     <div class="stat-number">12</div>
-    <div class="stat-label">moduĹ‚Ăłw silnika</div>
+    <div class="stat-label">modułów silnika</div>
   </div>
   <div class="stat reveal" style="transition-delay:.3s">
     <div class="stat-number">0</div>
-    <div class="stat-label">zaleĹĽnoĹ›ci zewnÄ™trznych</div>
+    <div class="stat-label">zależności zewnętrznych</div>
   </div>
 </div>
 
-<!-- â”€â”€â”€ PITCH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ─── PITCH ─────────────────────────────────────────────────── -->
 <section style="position:relative;z-index:2;padding:0 0 0 0;">
   <div class="pitch">
     <div class="reveal">
       <span class="pitch-label">czym jest triady</span>
-      <h2 class="pitch-heading">Teoria muzyczna,<br>ktĂłra <strong>dziaĹ‚a</strong><br>w przeglÄ…darce.</h2>
-      <p class="pitch-body">Triady to narzÄ™dzie dla gitarzystĂłw, songwriterĂłw i developerĂłw, ktĂłrzy chcÄ… zrozumieÄ‡ prowadzenie gĹ‚osĂłw, a nie tylko zapamiÄ™taÄ‡ pozycje akordĂłw. Silnik jest deterministyczny i bezstanowy&nbsp;â€” te same wejĹ›cia dajÄ… te same voicingi zawsze i wszÄ™dzie.</p>
+      <h2 class="pitch-heading">Teoria muzyczna,<br>która <strong>działa</strong><br>w przeglądarce.</h2>
+      <p class="pitch-body">Triady to narzędzie dla gitarzystów, songwriterów i developerów, którzy chcą zrozumieć prowadzenie głosów, a nie tylko zapamiętać pozycje akordów. Silnik jest deterministyczny i bezstanowy&nbsp;— te same wejścia dają te same voicingi zawsze i wszędzie.</p>
     </div>
 
     <div class="fret-visual reveal" style="transition-delay:.15s">
@@ -887,11 +887,11 @@ footer {
   </div>
 </section>
 
-<!-- â”€â”€â”€ FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ─── FEATURES ──────────────────────────────────────────────── -->
 <section class="features-section">
   <div class="features-inner">
     <div class="section-header">
-      <span class="section-label">moĹĽliwoĹ›ci</span>
+      <span class="section-label">możliwości</span>
       <h2 class="section-title">Zbudowany na <em>precyzji,</em><br>zaprojektowany do grania.</h2>
     </div>
 
@@ -902,8 +902,8 @@ footer {
             <circle cx="9" cy="9" r="7"/><line x1="9" y1="2" x2="9" y2="16"/><line x1="2" y1="9" x2="16" y2="9"/>
           </svg>
         </div>
-        <h3 class="feature-title">Triady zamkniÄ™te</h3>
-        <p class="feature-body">Wszystkie przewroty na zestawach strun 3-2-1, 4-3-2, 5-4-3 i 6-5-4. Poprawna enharmonia, offset struny B, voicingi z maksymalnym spanem poniĹĽej oktawy.</p>
+        <h3 class="feature-title">Triady zamknięte</h3>
+        <p class="feature-body">Wszystkie przewroty na zestawach strun 3-2-1, 4-3-2, 5-4-3 i 6-5-4. Poprawna enharmonia, offset struny B, voicingi z maksymalnym spanem poniżej oktawy.</p>
         <span class="feature-tag">triad-generator.js</span>
       </div>
 
@@ -914,7 +914,7 @@ footer {
           </svg>
         </div>
         <h3 class="feature-title">Minimal Voice Leading</h3>
-        <p class="feature-body">Algorytm Viterbiego planuje progresjÄ™ tak, ĹĽeby ruch palcĂłw byĹ‚ jak najmniejszy. Koszt = suma rĂłĹĽnic progĂłw miÄ™dzy sÄ…siednimi voicingami.</p>
+        <p class="feature-body">Algorytm Viterbiego planuje progresję tak, żeby ruch palców był jak najmniejszy. Koszt = suma różnic progów między sąsiednimi voicingami.</p>
         <span class="feature-tag">progression-engine.js</span>
       </div>
 
@@ -925,7 +925,7 @@ footer {
           </svg>
         </div>
         <h3 class="feature-title">Sugestie harmoniczne</h3>
-        <p class="feature-body">Propozycje â€žco dalej?" oparte na tabelach przejĹ›Ä‡ funkcyjnych i korpusie popularnych progresji. ĹšwiadomoĹ›Ä‡ skali: diatonika, harmoniczna, melodyczna, frygijska.</p>
+        <p class="feature-body">Propozycje „co dalej?" oparte na tabelach przejść funkcyjnych i korpusie popularnych progresji. Świadomość skali: diatonika, harmoniczna, melodyczna, frygijska.</p>
         <span class="feature-tag">suggestion-engine.js</span>
       </div>
 
@@ -936,7 +936,7 @@ footer {
           </svg>
         </div>
         <h3 class="feature-title">Synteza Karplus-Strong</h3>
-        <p class="feature-body">Audio bez sampli. Brzmienie gitarowe z algorytmu fizycznej syntezy, rytmy Whole / Rock / Ballada, humanizacja, pogĹ‚os, panorama gĹ‚osĂłw.</p>
+        <p class="feature-body">Audio bez sampli. Brzmienie gitarowe z algorytmu fizycznej syntezy, rytmy Whole / Rock / Ballada, humanizacja, pogłos, panorama głosów.</p>
         <span class="feature-tag">audio-schedule.js</span>
       </div>
 
@@ -947,7 +947,7 @@ footer {
           </svg>
         </div>
         <h3 class="feature-title">Tryb Sceny</h3>
-        <p class="feature-body">PeĹ‚noekranowa nakĹ‚adka do grania i prezentacji. Wielka typografia, animowany gryf, pasek postÄ™pu progresji, szklisty dok transportu.</p>
+        <p class="feature-body">Pełnoekranowa nakładka do grania i prezentacji. Wielka typografia, animowany gryf, pasek postępu progresji, szklisty dok transportu.</p>
         <span class="feature-tag">fretboard-view.js</span>
       </div>
 
@@ -958,31 +958,31 @@ footer {
           </svg>
         </div>
         <h3 class="feature-title">Klikalny gryf</h3>
-        <p class="feature-body">WskaĹĽ trzy nuty na podstrunnicy, silnik rozpozna triadÄ™, podpisze jÄ… w tonacji i zaproponuje dopisanie stopnia do progresji.</p>
+        <p class="feature-body">Wskaż trzy nuty na podstrunnicy, silnik rozpozna triadę, podpisze ją w tonacji i zaproponuje dopisanie stopnia do progresji.</p>
         <span class="feature-tag">triad-recognition.js</span>
       </div>
     </div>
   </div>
 </section>
 
-<!-- â”€â”€â”€ PROGRESSION DEMO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ─── PROGRESSION DEMO ──────────────────────────────────────── -->
 <section style="position:relative;z-index:2;border-bottom:1px solid var(--line);">
   <div class="demo-section">
     <div class="demo-inner">
       <div class="prog-display" id="prog-display">
         <span data-idx="0">I</span>
-        <span class="prog-divider">â€“</span>
+        <span class="prog-divider">–</span>
         <span data-idx="1">V</span>
-        <span class="prog-divider">â€“</span>
+        <span class="prog-divider">–</span>
         <span data-idx="2">vi</span>
-        <span class="prog-divider">â€“</span>
+        <span class="prog-divider">–</span>
         <span data-idx="3">IV</span>
       </div>
 
       <div class="demo-text reveal">
         <span class="section-label">progresje cyframi rzymskimi</span>
-        <h2 class="demo-heading">Wpisz <code style="font-family:var(--mono);font-size:.85em;color:var(--amber)">i-bVII-bVI-V</code><br>i naciĹ›nij&nbsp;Generate.</h2>
-        <p class="demo-body">Parser akceptuje konwencjÄ™ chromatycznÄ… pop/rock: baza durowa, wielkoĹ›Ä‡ liter to jakoĹ›Ä‡, prefiks b/#&nbsp;to alteracja prymy. Silnik sam wyliczy voicingi i zminimalizuje ruch palcĂłw na gryfie.</p>
+        <h2 class="demo-heading">Wpisz <code style="font-family:var(--mono);font-size:.85em;color:var(--amber)">i-bVII-bVI-V</code><br>i naciśnij&nbsp;Generate.</h2>
+        <p class="demo-body">Parser akceptuje konwencję chromatyczną pop/rock: baza durowa, wielkość liter to jakość, prefiks b/#&nbsp;to alteracja prymy. Silnik sam wyliczy voicingi i zminimalizuje ruch palców na gryfie.</p>
         <div class="demo-chips">
           <span class="chip highlight">I-V-vi-IV</span>
           <span class="chip">i-bVII-bVI-V</span>
@@ -995,7 +995,7 @@ footer {
   </div>
 </section>
 
-<!-- â”€â”€â”€ AUDIO â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ─── AUDIO ─────────────────────────────────────────────────── -->
 <section class="audio-section">
   <div class="audio-inner">
     <span class="section-label">web audio</span>
@@ -1003,7 +1003,7 @@ footer {
 
     <div class="audio-waveform" aria-hidden="true" id="waveform"></div>
 
-    <p class="audio-body reveal">Synteza Karplus-Strong emuluje drgania struny bez pliku audio. Harmonogram odtwarzania to czyste funkcje w silniku&nbsp;â€” testowalne bez AudioContext i deterministyczne co do milisekundy.</p>
+    <p class="audio-body reveal">Synteza Karplus-Strong emuluje drgania struny bez pliku audio. Harmonogram odtwarzania to czyste funkcje w silniku&nbsp;— testowalne bez AudioContext i deterministyczne co do milisekundy.</p>
 
     <div class="tech-list reveal" style="transition-delay:.1s">
       <span class="tech-tag">Karplus-Strong</span>
@@ -1017,32 +1017,32 @@ footer {
   </div>
 </section>
 
-<!-- â”€â”€â”€ CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ─── CTA ───────────────────────────────────────────────────── -->
 <section class="cta-section">
   <div class="cta-glow"></div>
   <h2 class="cta-heading reveal">
-    Zacznij graÄ‡.
+    Zacznij grać.
     <em>Teraz.</em>
   </h2>
-  <p class="cta-sub reveal" style="transition-delay:.12s">Ĺ»adnej instalacji, ĹĽadnych zaleĹĽnoĹ›ci. Tylko gryf, teoria i dĹşwiÄ™k.</p>
+  <p class="cta-sub reveal" style="transition-delay:.12s">Żadnej instalacji, żadnych zależności. Tylko gryf, teoria i dźwięk.</p>
   <div class="hero-actions reveal" style="transition-delay:.24s">
     <a href="app.html" class="btn-primary">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><polygon points="3,2 13,8 3,14"/></svg>
-      OtwĂłrz aplikacjÄ™
+      Otwórz aplikację
     </a>
   </div>
 </section>
 
 <div class="sep"><div class="sep-dot"></div></div>
 
-<!-- â”€â”€â”€ FOOTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+<!-- ─── FOOTER ────────────────────────────────────────────────── -->
 <footer>
   <div class="footer-brand">Tri<span>ady</span></div>
-  <div class="footer-info">Vanilla HTML Â· CSS Â· JS &nbsp;Â·&nbsp; MIT License &nbsp;Â·&nbsp; 2024</div>
+  <div class="footer-info">Vanilla HTML · CSS · JS &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; 2024</div>
 </footer>
 
 <script>
-/* â”€â”€ Perspective fretboard canvas â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Perspective fretboard canvas ─────────────────────────────── */
 (function () {
   const canvas = document.getElementById('hero-canvas');
   const ctx    = canvas.getContext('2d');
@@ -1051,7 +1051,7 @@ footer {
   const startTime = performance.now();
   const INTRO_MS  = 2600;
 
-  // Chord voicings: [{s, f}] â€” s: 0=low-E â€¦ 5=high-e; f: fret number
+  // Chord voicings: [{s, f}] — s: 0=low-E … 5=high-e; f: fret number
   const CHORDS = [
     { roman: 'I',  dots: [{s:2,f:5},{s:3,f:5},{s:4,f:5}] },   // C maj 2nd inv
     { roman: 'V',  dots: [{s:2,f:5},{s:3,f:4},{s:4,f:3}] },   // G maj root
@@ -1063,7 +1063,7 @@ footer {
 
   const NUM_STRINGS = 6;
   const NUM_FRETS   = 13;
-  const GAUGES      = [2.0, 1.7, 1.4, 1.2, 0.9, 0.7]; // bassâ†’treble
+  const GAUGES      = [2.0, 1.7, 1.4, 1.2, 0.9, 0.7]; // bass→treble
 
   function resize() {
     W = canvas.width  = canvas.offsetWidth;
@@ -1077,7 +1077,7 @@ footer {
     my = (e.clientY / window.innerHeight - 0.5) * 2;
   });
 
-  // â”€â”€ Perspective projection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Perspective projection ────────────────────────────────────
   // strIdx 0=bass(left), 5=treble(right)
   // depth 0=nut/far(top), 1=body/near(bottom)
   function proj(strIdx, depth) {
@@ -1093,7 +1093,7 @@ footer {
     return { x, y };
   }
 
-  // Equal-temperament fret â†’ depth along neck
+  // Equal-temperament fret → depth along neck
   function fretDepth(f) {
     if (f <= 0) return 0;
     const pos    = 1 - Math.pow(2, -f / 12);
@@ -1101,13 +1101,13 @@ footer {
     return (pos / maxPos) * 0.90;
   }
 
-  // â”€â”€ Eased intro alpha â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Eased intro alpha ─────────────────────────────────────────
   function introAlpha(now) {
     const r = Math.min(1, (now - startTime) / INTRO_MS);
     return r < 0.5 ? 2 * r * r : 1 - Math.pow(-2 * r + 2, 2) / 2;
   }
 
-  // â”€â”€ Draw helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Draw helpers ──────────────────────────────────────────────
   function drawBg() {
     const g = ctx.createRadialGradient(W * .5, H * .55, 0, W * .5, H * .55, W * .75);
     g.addColorStop(0, '#110e08');
@@ -1151,7 +1151,7 @@ footer {
       const d = fretDepth(f);
       const L = proj(0, d), R = proj(5, d);
       if (f === 0) {
-        // Nut â€” thick cream line
+        // Nut — thick cream line
         const ng = ctx.createLinearGradient(L.x, 0, R.x, 0);
         ng.addColorStop(0,   `rgba(210,190,150,${0.55 * ia})`);
         ng.addColorStop(0.5, `rgba(240,220,175,${0.80 * ia})`);
@@ -1257,7 +1257,7 @@ footer {
   function drawDots(ia, chordFrac, idx) {
     if (ia < 0.75) return;
     const chord = CHORDS[idx];
-    // fade in 0â†’0.18, hold, fade out 0.82â†’1
+    // fade in 0→0.18, hold, fade out 0.82→1
     const dAlpha = chordFrac < 0.18 ? chordFrac / 0.18
                  : chordFrac > 0.82 ? (1 - chordFrac) / 0.18
                  : 1;
@@ -1342,13 +1342,13 @@ footer {
     ctx.fillRect(0, H * 0.85, W, H * 0.15);
   }
 
-  // â”€â”€ Chord badge sync â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Chord badge sync ──────────────────────────────────────────
   const badgeItems = document.querySelectorAll('.chord-badge-item');
   function syncBadge(idx) {
     badgeItems.forEach((el, i) => el.classList.toggle('active', i === idx));
   }
 
-  // â”€â”€ Main loop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Main loop ─────────────────────────────────────────────────
   function loop(now) {
     const dt = Math.min(now - lastFrameMs, 80);
     lastFrameMs = now;
@@ -1377,7 +1377,7 @@ footer {
   requestAnimationFrame(loop);
 })();
 
-/* â”€â”€ Chord diagram animation (pitch section) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Chord diagram animation (pitch section) ─────────────────── */
 (function () {
   const labels = document.querySelectorAll('.chord-roman');
   const chords = document.querySelectorAll('.voicing-chord');
@@ -1395,7 +1395,7 @@ footer {
   setInterval(advance, 1800);
 })();
 
-/* â”€â”€ Waveform bars â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Waveform bars ───────────────────────────────────────────── */
 (function () {
   const wf = document.getElementById('waveform');
   const heights = [20, 40, 65, 50, 80, 55, 35, 70, 45, 90, 60, 75, 40, 85, 55, 35, 70, 50, 30, 65, 45, 80, 60, 25, 50];
@@ -1410,7 +1410,7 @@ footer {
   });
 })();
 
-/* â”€â”€ Progression cycle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Progression cycle ───────────────────────────────────────── */
 (function () {
   const spans = document.querySelectorAll('#prog-display span[data-idx]');
   let idx = 0;
@@ -1423,7 +1423,7 @@ footer {
   setInterval(light, 1000);
 })();
 
-/* â”€â”€ Scroll reveal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Scroll reveal ───────────────────────────────────────────── */
 (function () {
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); } });
