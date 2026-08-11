@@ -73,6 +73,14 @@ Następnie otwórz adres `http://localhost:8000/` i załaduj plik aplikacji. Sam
 
 PRD opisuje szeroki zestaw testów obejmujących między innymi enharmonię, rozpoznawanie przewrotów, planowanie voice leadingu, stroje alternatywne, geometrię gryfu, animację, share-state i audio scheduling. Wspomniane jest 166 asercji, co pokazuje, że projekt od początku był traktowany nie jako jednorazowy hack, ale jako mały, solidny silnik muzyczny.
 
+## Licznik odwiedzin
+
+W stopce strony startowej wyświetla się liczba odwiedzin. Ponieważ projekt nie ma backendu, licznik korzysta z publicznego API [Abacus](https://abacus.jasoncameron.dev) (namespace `anthcode-triads`, klucze `landing` i `app`). Landing pokazuje liczbę w stopce, aplikacja rejestruje wejście po cichu, bez elementu w interfejsie.
+
+Liczone są sesje, nie odsłony: znacznik w `sessionStorage` sprawia, że odświeżenie strony nie nabija licznika. Nie ma cookies ani trwałego identyfikatora, więc rozwiązanie nie wymaga zgody na śledzenie. Gdy API nie odpowie, jest zablokowane przez adblock albo przekroczy pięciosekundowy timeout, licznik po prostu się nie pokazuje — zamiast mylącego zera.
+
+Warto wiedzieć, że taki licznik jest ozdobą, a nie metryką. Każdy może podbić liczbę zwykłym `curl`, boty ją zawyżają, a blokery zaniżają. Publiczne API licznikowe bywają też nietrwałe — poprzednik tego rozwiązania, `countapi.xyz`, zniknął, a `counterapi.dev` w wersji v1 zwraca dziś 410. Podmiana sprowadza się do zmiany stałej `API` w skrypcie w `index.html` i adresu w `app.html`; docelowo naturalnym krokiem jest własny endpoint, na przykład Cloudflare Worker na subdomenie projektu.
+
 ## Ograniczenia
 
 Aktualna wersja skupia się na triadach zamkniętych i nie próbuje być pełnym systemem analizy harmonicznej. Speller alteracji jest pragmatyczny, parser progresji celowo trzyma się jednej, spójnej konwencji chromatycznej, a część zaawansowanych przypadków, takich jak pełne rozstrzyganie funkcji akordów zwiększonych, została świadomie uproszczona i udokumentowana.
