@@ -2341,6 +2341,17 @@ function init() {
   if (shared.stage && state.plan) enterStage();        // link z trybem sceny: od razu na scenę
 }
 init();
+
+/* ── Licznik odwiedzin: sama rejestracja, bez UI ─────────────── */
+(function () {
+  if (document.visibilityState === 'prerender') return;
+  try {
+    if (sessionStorage.getItem('triads-visit-app')) return;   // jedno wejście na sesję
+    sessionStorage.setItem('triads-visit-app', '1');
+  } catch (_) { /* tryb prywatny blokuje storage — wtedy liczymy każde wejście */ }
+  fetch('https://abacus.jasoncameron.dev/hit/anthcode-triads/app', { keepalive: true })
+    .catch(() => { /* licznik nigdy nie może przeszkodzić w działaniu aplikacji */ });
+})();
 </script>
 </body>
 </html>

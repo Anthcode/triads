@@ -1038,7 +1038,7 @@ footer {
 <!-- ─── FOOTER ────────────────────────────────────────────────── -->
 <footer>
   <div class="footer-brand">Tri<span>ady</span></div>
-  <div class="footer-info">Vanilla HTML · CSS · JS &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; 2024</div>
+  <div class="footer-info">Vanilla HTML · CSS · JS &nbsp;·&nbsp; MIT License &nbsp;·&nbsp; 2024<span id="visit-counter" hidden>&nbsp;·&nbsp; Odwiedziny: <span id="visit-count"></span></span></div>
 </footer>
 
 <script>
@@ -1429,6 +1429,40 @@ footer {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); } });
   }, { threshold: .15 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+})();
+
+/* ── Licznik odwiedzin ───────────────────────────────────────── */
+(function () {
+  const API = 'https://abacus.jasoncameron.dev';   // publiczne API licznikowe, bez klucza i bez konta
+  const NS  = 'anthcode-triads';                   // wspólny namespace projektu
+  const KEY = 'landing';                           // app.html liczy się osobno, pod kluczem 'app'
+
+  const box = document.getElementById('visit-counter');
+  const out = document.getElementById('visit-count');
+  if (!box || !out) return;
+  if (document.visibilityState === 'prerender') return;   // prefetch przeglądarki to jeszcze nie wizyta
+
+  // Jedno wejście na sesję przeglądarki: bez cookies i bez trwałego ID,
+  // więc licznik nie wymaga zgody na śledzenie. F5 nie nabija liczby.
+  let fresh = true;
+  try {
+    const mark = 'triads-visit-' + KEY;
+    fresh = !sessionStorage.getItem(mark);
+    sessionStorage.setItem(mark, '1');
+  } catch (_) { /* tryb prywatny blokuje storage — wtedy liczymy każde wejście */ }
+
+  const ctrl = new AbortController();
+  const kill = setTimeout(() => ctrl.abort(), 5000);
+
+  fetch(API + '/' + (fresh ? 'hit' : 'get') + '/' + NS + '/' + KEY, { signal: ctrl.signal })
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(d => {
+      if (typeof d.value !== 'number') return;
+      out.textContent = new Intl.NumberFormat('pl-PL').format(d.value);
+      box.hidden = false;                          // pokazujemy dopiero, gdy jest co pokazać
+    })
+    .catch(() => { /* offline, adblock albo padnięte API — stopka zostaje bez licznika */ })
+    .finally(() => clearTimeout(kill));
 })();
 </script>
 </body>
