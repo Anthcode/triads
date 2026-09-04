@@ -500,5 +500,167 @@ assert(gN.hitTest(gN.wireXpx(5) - 0.01, gN.stringY(1)).fret === 5
   && gN.hitTest(gN.wireXpx(5) + 0.01, gN.stringY(1)).fret === 6,
   'granica pól dokładnie na drucie progu (5 | 6)');
 
+/* NOWE — diady: power chordy i tercje jako redukcja triady */
+section('Diady: budowa i nazwy');
+const d5 = E.buildDyad('C', 'p5');
+assert(d5 && d5.kind === 'dyad' && d5.name === 'C5' && d5.names.join(' ') === 'C G' && d5.pcs.join(',') === '0,7',
+  'buildDyad(C, p5) → C5 = C G');
+assert(E.buildDyad('C', 'a5').names.join(' ') === 'C G♯' && E.buildDyad('C', 'a5').name === 'C+5',
+  'kwinta zwiększona pisana literą kwinty: C G♯ (nie A♭), nazwa C+5');
+assert(E.buildDyad('B', 'd5').name === 'B°5' && E.buildDyad('B', 'd5').names.join(' ') === 'B F', 'B°5 = B F');
+assert(E.buildDyad('C', 'M3').name === 'C(no5)' && E.buildDyad('C', 'm3').names.join(' ') === 'C E♭'
+  && E.buildDyad('C', 'm3').name === 'Cm(no5)', 'tercje: C(no5) = C E, Cm(no5) = C E♭');
+assert(E.buildDyad('Eb', 'p5').names.join(' ') === 'E♭ B♭', 'spelling z bemolami: E♭5 = E♭ B♭');
+assert(E.buildDyad('C', 'maj') === null && E.buildDyad('H', 'p5') === null, 'nieznana jakość / nuta → null');
+assert(E.buildChord('C', 'maj').kind === 'triad', 'buildChord oznacza triadę (kind)');
+assert(Object.keys(E.CHORD_TYPES).join(',') === 'triad,dyad5,dyad3'
+  && E.CHORD_TYPES.triad.size === 3 && E.CHORD_TYPES.dyad5.size === 2, 'CHORD_TYPES: triada (3) i dwie rodziny diad (2)');
+
+section('Diady: z triady (funkcja harmoniczna zostaje)');
+const Am = E.parseDegree('vi', 'C');
+const am5 = E.triadToDyad(Am, 'fifth'), am3 = E.triadToDyad(Am, 'third');
+assert(am5.name === 'A5' && am5.roman === 'vi' && am5.degree === 6 && am5.triadName === 'Am',
+  'vi (Am) → A5, zapis rzymski i stopień zachowane');
+assert(am3.name === 'Am(no5)' && am3.names.join(' ') === 'A C', 'vi → tercja Am(no5) = A C');
+assert(E.triadToDyad(E.buildChord('B', 'dim'), 'fifth').name === 'B°5'
+  && E.triadToDyad(E.buildChord('B', 'dim'), 'third').name === 'Bm(no5)', 'dim → B°5 / Bm(no5)');
+assert(E.triadToDyad(E.buildChord('C', 'aug'), 'fifth').name === 'C+5'
+  && E.triadToDyad(E.buildChord('C', 'aug'), 'third').name === 'C(no5)', 'aug → C+5 / C(no5)');
+assert(E.triadToDyad(am5, 'third') === am5, 'diada przechodzi przez triadToDyad bez zmian');
+assert(E.chordForType(Am, 'triad') === Am && E.chordForType(Am, 'nope') === Am
+  && E.chordForType(Am, 'dyad5').name === 'A5' && E.chordForType(Am, 'dyad3').name === 'Am(no5)',
+  'chordForType: triada = identyczność, dyad5/dyad3 = redukcja');
+assert(E.diatonicTriads('C', 'major').map((c) => E.chordForType(c, 'dyad5').name).join(' ') === 'C5 D5 E5 F5 G5 A5 B°5',
+  'power chordy diatoniczne C-dur: C5 … B°5');
+assert(E.diatonicTriads('A', 'harmonic').map((c) => E.chordForType(c, 'dyad5').name).join(' ') === 'A5 B°5 C+5 D5 E5 F5 G♯°5',
+  'a-moll harmoniczna: C+5 (bIII+) i G♯°5 (vii°)');
+assert(E.diatonicTriads('C', 'major').map((c) => E.chordForType(c, 'dyad3').name).join(' ')
+  === 'C(no5) Dm(no5) Em(no5) F(no5) G(no5) Am(no5) Bm(no5)', 'tercje diatoniczne C-dur');
+assert(E.canonicalRoman(E.triadToDyad(E.parseDegree('bVII', 'A'), 'fifth'), 9) === 'bVII'
+  && E.canonicalRoman(E.triadToDyad(E.parseDegree('ii', 'C'), 'third'), 0) === 'ii'
+  && E.canonicalRoman(E.triadToDyad(E.parseDegree('vii°', 'C'), 'fifth'), 0) === 'vii°'
+  && E.canonicalRoman(E.triadToDyad(E.parseDegree('III+', 'C'), 'fifth'), 0) === 'III+',
+  'canonicalRoman dla diad: m3/d5 małe litery, ° i + z kwinty');
+
+section('Diady: zestawy strun i voicingi');
+assert(E.stringSetsFor(2).length === 9 && E.stringSetsFor(2).every((k) => E.STRING_SETS[k].length === 2)
+  && E.stringSetsFor(3).join(',') === '321,432,543,654' && E.stringSetsFor(4).length === 0,
+  'stringSetsFor: 9 par strun dla diad, 4 trójki dla triad, pusto dla innych');
+assert(E.stringSetsFor(2).slice(0, 5).join(',') === '21,32,43,54,65', 'pary sąsiednie przed parami z przeskokiem');
+const C5 = E.chordForType(C, 'dyad5');
+const vC5 = E.voicingsForChord(C5, '65', { minFret: 0, maxFret: 12 });
+assert(vC5.length === 2 && JSON.stringify(vC5.map((v) => v.frets)) === '[[3,3],[8,10]]',
+  'C5 na 6-5 (0–12): [3,3] (C5/G) i [8,10] (klasyczny power chord), jest: ' + JSON.stringify(vC5.map((v) => v.frets)));
+const root5 = vC5.find((v) => v.inversion === 'root');
+assert(root5.midis.join(',') === '48,55' && root5.noteNames.join(' ') === 'C G' && root5.position === 9
+  && root5.inversionName === 'pozycja zasadnicza', 'power chord: MIDI 48 55, nuty C G, śr. próg 9');
+const inv5 = vC5.find((v) => v.inversion === 'inv1');
+assert(inv5.noteNames.join(' ') === 'G C' && inv5.midis[1] - inv5.midis[0] === 5, 'I przewrót kwinty = kwarta G–C w basie G');
+assert(E.voicingsForChord(C5, '65', { maxFret: 12, inversionFilter: 'inv2' }).length === 0, 'diada nie ma II przewrotu → pusto');
+assert(E.voicingsForChord(C5, '321', { maxFret: 12 }).length === 0 && E.voicingsForChord(C, '65', { maxFret: 12 }).length === 0,
+  'niezgodność liczby głosów z zestawem strun → pusta lista, bez wyjątku');
+const vE3 = E.voicingsForChord(E.chordForType(C, 'dyad3'), '21', { maxFret: 5 });
+assert(vE3.length === 1 && vE3[0].frets.join(',') === '1,0' && vE3[0].noteNames.join(' ') === 'C E',
+  'tercja C–E na 2-1 w progach 0–5: B:1 e:0');
+let dyOk = true, dySpan = true;
+for (const key of E.stringSetsFor(2)) {
+  for (const q of Object.keys(E.DYAD_QUALITIES)) {
+    for (const v of E.voicingsForChord(E.buildDyad('F#', q), key, { maxFret: 15 })) {
+      if (v.frets.length !== 2 || v.midis.length !== 2 || v.noteNames.length !== 2) dyOk = false;
+      if (!(v.midis[0] < v.midis[1]) || v.midis[1] - v.midis[0] >= 12) dySpan = false;
+      if (!v.midis.every((m) => E.buildDyad('F#', q).pcs.includes(E.mod12(m)))) dyOk = false;
+    }
+  }
+}
+assert(dyOk, 'każdy voicing diady: 2 głosy, same nuty akordu');
+assert(dySpan, 'diady: głosy rosnące, rozpiętość < oktawy');
+const vDC5 = E.voicingsForChord(C5, '65', { maxFret: 12, tuning: 'dropC', inversionFilter: 'root' });
+assert(vDC5.length === 2 && vDC5[0].frets.join(',') === '0,0', 'Drop C: C5 na pustych 6-5 (kwinta w stroju)');
+
+section('Diady: voice leading, audio, animacja');
+const powChords = E.parseProgression('I-V-vi-IV', 'C').chords.map((c) => E.chordForType(c, 'dyad5'));
+const powPlan = E.planProgression(powChords, '65', { minFret: 0, maxFret: 12 });
+assert(powPlan.ok && powPlan.voicings.length === 4 && powPlan.voicings.every((v) => v.frets.length === 2),
+  'plan power chordów I-V-vi-IV na 6-5 istnieje (2 głosy)');
+assert(powPlan.totalCost <= 12, 'koszt prowadzenia głosów liczony z 2 głosów (' + powPlan.totalCost.toFixed(1) + ')');
+assert(E.transitionCost(powPlan.voicings[0], powPlan.voicings[1]) === Math.abs(powPlan.voicings[0].frets[0] - powPlan.voicings[1].frets[0])
+  + Math.abs(powPlan.voicings[0].frets[1] - powPlan.voicings[1].frets[1])
+  + 0.5 * Math.max(0, Math.abs(powPlan.voicings[0].position - powPlan.voicings[1].position) - 3),
+  'transitionCost sumuje tylko istniejące głosy');
+assert(!E.planProgression(powChords, '321', { maxFret: 12 }).ok, 'plan diad na zestawie 3-strunowym → {ok:false}, bez crasha');
+const pv = powPlan.voicings[0];
+assert(E.strumEvents(pv).length === 2 && E.patternEvents(pv, { pattern: 'whole' }).map((e) => e.voice).join('') === '01',
+  'strum / whole dla diady: 2 zdarzenia, głosy 0 1');
+const rockD = E.patternEvents(pv, { bpm: 80, pattern: 'rock' });
+assert(rockD.length === 12 && rockD.every((e) => e.voice === 0 || e.voice === 1), 'rock: 6 kroków × 2 głosy, indeksy głosów 0/1');
+assert(E.patternEvents(pv, { pattern: 'ballad' }).map((e) => e.voice).join('') === '01010101',
+  'ballada dla diady: głos 2 zawija się do 0 (bas–góra–bas–góra)');
+const sD = E.progressionSchedule(powPlan.voicings, { bpm: 120 });
+assert(sD.events.length === 8 && sD.chordTimes.length === 4, 'harmonogram diad: 4 akordy × 2 zdarzenia');
+assert(E.voiceMoves(powPlan.voicings).length === 6, 'voiceMoves: (n−1)·2 ruchów dla 4 diad');
+const aD = E.animState(sD.chordTimes[1] - E.transitionTime(sD.chordDur) / 2, powPlan.voicings, sD, {});
+assert(aD.dots.length === 2 && aD.inTransition && aD.dots.every((d) => d.string === powPlan.voicings[0].strings[d.voice]),
+  'animState: 2 kropki, każda na swojej strunie');
+const triPlan = E.planProgression(E.parseProgression('I-V-vi-IV', 'C').chords, '432', { maxFret: 12 });
+assert(E.animState(0, triPlan.voicings, E.progressionSchedule(triPlan.voicings, {}), {}).dots.length === 3
+  && E.patternEvents(triPlan.voicings[0], { pattern: 'rock' }).length === 18, 'triady bez zmian: 3 kropki, rock = 18 zdarzeń');
+
+section('Rozpoznawanie diad');
+const rP = E.recognizeDyad([48, 55]);
+assert(rP.ok && rP.slashName === 'C5' && rP.quality === 'p5' && rP.inversion === 'root' && rP.roman === 'I' && rP.diatonic
+  && rP.interval.label === 'kwinta czysta', 'C G → C5, I, pozycja zasadnicza, diatoniczny');
+const rP1 = E.recognizeDyad([55, 60]);
+assert(rP1.ok && rP1.slashName === 'C5/G' && rP1.inversion === 'inv1' && rP1.interval.label === 'kwarta czysta'
+  && rP1.noteNames.join(' ') === 'G C', 'G C (kwarta) → C5/G, I przewrót power chordu');
+const r3 = E.recognizeDyad([52, 60]);
+assert(r3.ok && r3.slashName === 'C(no5)/E' && r3.quality === 'M3' && r3.inversion === 'inv1' && r3.diatonic
+  && r3.interval.label === 'seksta mała', 'E C (seksta mała) → C(no5)/E, przewrót tercji wielkiej');
+const rT = E.recognizeDyad([47, 53]);
+assert(rT.ok && rT.slashName === 'B°5' && rT.roman === 'vii°' && rT.diatonic && rT.interval.label === 'tryton',
+  'B F (tryton) → B°5, vii°, diatoniczny w C-dur');
+const rTi = E.recognizeDyad([53, 59]);
+assert(rTi.ok && rTi.slashName === 'B°5/F' && rTi.roman === 'vii°' && rTi.inversion === 'inv1' && rTi.diatonic,
+  'F B (tryton w przewrocie) w C-dur → B°5/F: diatonika rozstrzyga symetrię trytonu');
+assert(E.recognizeDyad([53, 59], { key: 'Db' }).slashName === 'F°5', 'ten sam tryton w D♭-dur (nic nie diatoniczne) → pryma = bas: F°5');
+const rAmb = E.recognizeDyad([48, 56]);
+assert(rAmb.ok && rAmb.slashName === 'A♭(no5)/C' && !rAmb.diatonic && rAmb.roman === 'bVI',
+  'C G♯/A♭ w C-dur: bez rozstrzygnięcia diatonicznego → odczyt tercjowy A♭(no5)/C, bVI');
+const rHar = E.recognizeDyad([48, 56], { key: 'A', scale: 'harmonic' });
+assert(rHar.ok && rHar.slashName === 'C+5' && rHar.roman === 'bIII+' && rHar.diatonic,
+  'ten sam dwudźwięk w a-moll harmonicznej → C+5 (bIII+), bo tak mówi diatonika');
+const rm = E.recognizeDyad([48, 51]);
+assert(rm.ok && rm.slashName === 'Cm(no5)' && rm.roman === 'i' && !rm.diatonic, 'C E♭ w C-dur → Cm(no5), i (zapożyczenie)');
+assert(E.recognizeDyad([48, 51], { key: 'C', scale: 'minor' }).diatonic, 'C E♭ w c-moll → diatoniczny');
+const rBad = E.recognizeDyad([48, 50]);
+assert(!rBad.ok && rBad.interval.label === 'sekunda wielka' && /sekunda wielka/.test(rBad.reason),
+  'sekunda → odmowa z nazwą interwału');
+assert(!E.recognizeDyad([60, 72]).ok && !E.recognizeDyad([60]).ok && !E.recognizeDyad([60, 64, 67]).ok,
+  'oktawa / 1 dźwięk / 3 dźwięki → grzeczna odmowa');
+const rOct2 = E.recognizeDyad([79, 48]);
+assert(rOct2.ok && rOct2.slashName === 'C5' && rOct2.midis.join(',') === '48,79', 'kolejność i oktawy bez znaczenia (bas = najniższy)');
+let dyRt = true;
+for (const k of ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F']) {
+  for (const sc of Object.keys(E.SCALE_STEPS)) {
+    for (const c of E.diatonicTriads(k, sc)) {
+      for (const fam of ['fifth', 'third']) {
+        const d = E.triadToDyad(c, fam);
+        const m0 = 48 + d.pcs[0], m1 = m0 + E.mod12(d.pcs[1] - d.pcs[0]);
+        const r = E.recognizeDyad([m0, m1], { key: k, scale: sc });
+        if (!r.ok || !r.diatonic || r.roman !== c.roman || r.inversion !== 'root' || r.chord.name !== d.name) dyRt = false;
+        const ri = E.recognizeDyad([m1, m0 + 12], { key: k, scale: sc });   // przewrót: górny dźwięk w basie
+        if (!ri.ok || !ri.diatonic || ri.roman !== c.roman || ri.inversion !== 'inv1') dyRt = false;
+      }
+    }
+  }
+}
+assert(dyRt, 'masowy roundtrip: diada z każdej diatonicznej triady (12 tonacji × 4 skale × 7 stopni × 2 rodziny × 2 przewroty) rozpoznana jak diatonika');
+
+section('Share-state: typ akordu');
+const ctRt = E.decodeShareState(E.encodeShareState({ ctype: 'dyad5', set: '65' })).state;
+assert(ctRt.ctype === 'dyad5' && ctRt.set === '65', 'roundtrip ct=dyad5 i dwustrunowy zestaw');
+assert(E.encodeShareState({ ctype: 'triad' }) === 'ct=triad' && E.encodeShareState({ ctype: 'sept' }) === ''
+  && E.decodeShareState('ct=sept').state.ctype === undefined, 'nieznany typ akordu odrzucany w obie strony');
+assert(E.encodeShareState({ key: 'C', ctype: 'dyad3', set: '42' }) === 'k=C&ct=dyad3&ss=42', 'ct stoi między skalą a zestawem (stała kolejność)');
+
 console.log(`\n${'='.repeat(40)}\nWynik: ${pass} ✔ / ${fail} ✘  (razem ${pass + fail})`);
 process.exit(fail ? 1 : 0);

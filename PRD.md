@@ -32,7 +32,7 @@ Jeden plik `index.html` z logicznym podziałem na sekcje-moduły (komentarze
 
 Przepływ danych: **stan UI (filtry) → engine (czyste funkcje) → render**.
 Engine jest bezstanowy i deterministyczny (te same wejścia → te same wyjścia),
-co czyni go w pełni testowalnym (zob. `test.js`, 166 asercji — w tym 14 dla harmonogramu audio, 11 dla stroju Drop C, 22 dla geometrii gryfu i osi czasu animacji, 24 dla silnika propozycji, 15 dla share-state, 16 dla wzorców rytmicznych i humanizacji oraz 17 dla rozpoznawania triad i `hitTest` klikalnego gryfu).
+co czyni go w pełni testowalnym (zob. `test.js`, 223 asercje — w tym 57 dla diad, 14 dla harmonogramu audio, 11 dla stroju Drop C, 22 dla geometrii gryfu i osi czasu animacji, 24 dla silnika propozycji, 15 dla share-state, 16 dla wzorców rytmicznych i humanizacji oraz 17 dla rozpoznawania triad i `hitTest` klikalnego gryfu).
 
 Rozszerzalność: jakości akordów i interwały trzymane w tablicach
 (`QUALITY_INTERVALS`), przewroty jako mapa `INVERSIONS`. Dodanie seventh chords =
@@ -359,7 +359,14 @@ Voicing dodatkowo niesie `tuning`, więc render i audio są od niego niezależne
   BPM lub rytmu w trakcie grania restartuje sesję w tym samym trybie.
   Masowy roundtrip rozpoznania (12 tonacji × 4 skale × 7 stopni) znalazł
   i naprawił utajony błąd spellera (pułapka 21).
-- Roadmapa: seventh chords (N-głosowy generator), drop-2, arpeggia, eksport MIDI,
+- Diady (wdrożone): typ akordu `CHORD_TYPES` (triada / diada kwintowa / diada
+  tercjowa) jako globalne ustawienie; diada = redukcja triady (`triadToDyad`,
+  `chordForType`) z zachowanym stopniem i zapisem rzymskim, więc parser, diatonika
+  i sugestie nie wiedzą o diadach. Katalog `DYAD_QUALITIES` (p5, °5, +5, M3, m3),
+  kwarta/seksta = I przewrót (`DYAD_INVERSIONS`), pary strun w `STRING_SETS`
+  (`stringSetsFor(2)`), generator voicingów N-głosowy, `recognizeDyad` dla gryfu
+  (dwuznaczne 4/8/6 półtonów rozstrzyga diatonika tonacji), klucz `ct` w linku.
+- Roadmapa: seventh chords (generator jest już N-głosowy), drop-2, arpeggia, eksport MIDI,
   zapis PNG taba, kolejne stroje (Drop D, DADGAD), ranking propozycji ważony
   kosztem voice leadingu, własny edytor wzorców rytmicznych, rozpoznawanie
   triad rozszerzone o seventh chords, prawdziwie ciągłe tempo (bez restartu).
