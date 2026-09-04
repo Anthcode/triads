@@ -9,7 +9,8 @@ Triady pomagają szybko znaleźć grywalne układy triad na wybranych zestawach 
 Najważniejsze możliwości:
 
 - Generowanie zamkniętych triad dla jakości: dur, moll, zmniejszony i zwiększony.
-- Obsługa zestawów strun 3-2-1, 4-3-2, 5-4-3 i 6-5-4.
+- Diady (akordy dwudźwiękowe): power chordy (kwinta czysta, zmniejszona, zwiększona) i tercje (wielka, mała), z kwartą i sekstą jako ich przewrotami.
+- Obsługa zestawów strun 3-2-1, 4-3-2, 5-4-3 i 6-5-4 dla triad oraz par strun (sąsiednich i z przeskokiem, np. 6-5, 2-1, 4-2) dla diad.
 - Filtrowanie po przewrotach, zakresie progów, tonacji, skali i stroju.
 - Praca na diatonice tonacji w skalach durowej, molowej naturalnej, harmonicznej i melodycznej.
 - Parsowanie progresji zapisanych cyframi rzymskimi, na przykład `I-V-vi-IV` albo `i-bVII-bVI-V`.
@@ -17,12 +18,15 @@ Najważniejsze możliwości:
 - Sugestie „co dalej?” dla kolejnego stopnia progresji na podstawie heurystyk harmonicznych i korpusu popularnych wzorców.
 - Odtwarzanie pojedynczych voicingów i całych progresji przez Web Audio, z rytmami, metronomem, count-inem i opcjonalnym pogłosem.
 - Tryb Sceny do grania i prezentacji progresji na dużym, animowanym gryfie.
-- Karta Gryf, w której można kliknąć dźwięki na podstrunnicy, rozpoznać triadę i dopisać ją do progresji.
+- Karta Gryf, w której można kliknąć dźwięki na podstrunnicy, rozpoznać triadę (albo diadę, gdy wybrany jest typ „diada”) i dopisać ją do progresji.
+- Przełącznik typu akordu (triada / diada – kwinty / diada – tercje), który jednym ruchem zamienia całą progresję np. na power chordy — funkcje harmoniczne i cyfry rzymskie zostają te same.
 - Udostępnianie stanu aplikacji przez URL dzięki funkcji „Kopiuj link”.
 
 ## Jak działa
 
 Model danych opiera się na klasach wysokości MIDI, jawnie zdefiniowanych strojach oraz poprawnym spellingu enharmonicznym, dzięki czemu aplikacja nie zgaduje nazw nut „po krzyżykach”, tylko wyprowadza je z funkcji skali i akordu. Generowanie triad uwzględnia prawdziwe relacje między strunami, w tym nieregularność między strunami G i B, co jest kluczowe dla poprawnych tabów i diagramów.
+
+Diady są modelowane jako redukcja triady: „diada – kwinty” zostawia prymę i kwintę (I → C5, vii° → B°5), „diada – tercje” prymę i tercję (ii → Dm(no5)). Parser progresji, diatonika i silnik sugestii pracują nadal na triadach, a zamiana na wybrany typ następuje tuż przed generowaniem voicingów, więc zapis rzymski, stopnie i propozycje „co dalej?” pozostają identyczne niezależnie od typu. Kwarta i seksta nie są osobnymi jakościami, tylko I przewrotem kwinty i tercji, dlatego filtr przewrotów działa dla diad tak samo jak dla triad. Generator voicingów jest N-głosowy: zestaw strun musi mieć tyle strun, ile akord ma składników, a minimalne prowadzenie głosów, rytmy, animacja gryfu i rozpoznawanie na klikalnym gryfie liczą liczbę głosów z danych, nie z założenia „zawsze trzy”.
 
 Planowanie progresji odbywa się warstwowo: dla każdego akordu generowany jest zbiór możliwych voicingów, a następnie silnik wybiera najtańszą ścieżkę między nimi. Koszt przejścia liczy różnice progów na tych samych strunach i dodaje lekką karę za duży skok pozycji, dzięki czemu wynik jest zarówno muzycznie płynny, jak i grywalny.
 
@@ -36,7 +40,7 @@ Taki podział ma jedną ważną zaletę: silnik pozostaje bezstanowy i determini
 
 Aktualnie aplikacja wspiera dwa stroje: standardowy oraz Drop C. Dzięki temu diagramy, taby, audio i minimal voice leading działają nie tylko dla klasycznego stroju E A D G B e, ale również dla cięższych zastosowań harmonicznych i riffowych.
 
-Obsługiwane są wyłącznie triady zamknięte, bez drop-2, drop-3 i bez open voicings. Roadmapa przewiduje jednak dalszy rozwój w stronę akordów septymowych, arpeggiów, eksportu MIDI, dodatkowych strojów oraz bardziej zaawansowanego rankingu sugestii.
+Obsługiwane są triady zamknięte i diady (power chordy oraz tercje wraz z przewrotami), bez drop-2, drop-3 i bez open voicings. Roadmapa przewiduje jednak dalszy rozwój w stronę akordów septymowych, arpeggiów, eksportu MIDI, dodatkowych strojów oraz bardziej zaawansowanego rankingu sugestii.
 
 ## Audio i interakcja
 
@@ -68,10 +72,11 @@ Następnie otwórz adres `http://localhost:8000/` i załaduj plik aplikacji. Sam
 4. W zakładce **Progresja** wpisz ciąg cyfr rzymskich i wygeneruj plan voicingów z minimalnym ruchem palców.
 5. Użyj **Odtwórz**, **Ćwicz** i **Scena**, aby usłyszeć i zobaczyć progresję w ruchu.
 6. W zakładce **Gryf** zaznacz trzy dźwięki i sprawdź, jaką triadę rozpoznaje silnik.
+7. Przełącz **Typ akordu** na „diada — kwinty (power chords)”: zestawy strun zmienią się na pary (np. 6‑5), progresja przeliczy się na power chordy, a gryf rozpozna dwudźwięki.
 
 ## Jakość i testy
 
-PRD opisuje szeroki zestaw testów obejmujących między innymi enharmonię, rozpoznawanie przewrotów, planowanie voice leadingu, stroje alternatywne, geometrię gryfu, animację, share-state i audio scheduling. Wspomniane jest 166 asercji, co pokazuje, że projekt od początku był traktowany nie jako jednorazowy hack, ale jako mały, solidny silnik muzyczny.
+PRD opisuje szeroki zestaw testów obejmujących między innymi enharmonię, rozpoznawanie przewrotów, planowanie voice leadingu, stroje alternatywne, geometrię gryfu, animację, share-state i audio scheduling. Aktualny zestaw to 223 asercji (w tym diady: budowa, redukcja z triad, voicingi na parach strun, voice leading, rytmy, rozpoznawanie dwudźwięków i share-state), co pokazuje, że projekt od początku był traktowany nie jako jednorazowy hack, ale jako mały, solidny silnik muzyczny.
 
 ## Licznik odwiedzin
 

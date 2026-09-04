@@ -289,14 +289,15 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
 <div class="wrap">
   <header>
     <h1>Triady<span class="dot">.</span></h1>
-    <p>Zamknięte triady na zestawach strun, diatonika tonacji i progresje z minimalnym
-       prowadzeniem głosów — teraz także do posłuchania.</p>
+    <p>Zamknięte triady i diady (power chordy, tercje) na zestawach strun, diatonika tonacji
+       i progresje z minimalnym prowadzeniem głosów — także do posłuchania.</p>
   </header>
 
   <div class="controls">
     <div class="ctrl"><label for="tuning">Strój</label><select id="tuning"></select></div>
     <div class="ctrl"><label for="key">Tonacja</label><select id="key"></select></div>
     <div class="ctrl"><label for="scale">Skala</label><select id="scale"></select></div>
+    <div class="ctrl"><label for="ctype">Typ akordu</label><select id="ctype"></select></div>
     <div class="ctrl"><label for="set">Zestaw strun</label>
       <select id="set"></select></div>
     <div class="ctrl"><label for="inv">Przewroty</label>
@@ -444,6 +445,29 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
   const QUALITY_INTERVALS = { maj: [0, 4, 7], min: [0, 3, 7], dim: [0, 3, 6], aug: [0, 4, 8] };
   const QUALITY_SUFFIX = { maj: '', min: 'm', dim: '°', aug: '+' };
 
+  /* — diady (akordy dwudźwiękowe): kwinty (power chords) i tercje.
+       Jakość = realny interwał w półtonach; litera drugiego dźwięku wynika z kroku
+       (kwinta = +4 litery, tercja = +2), więc C–G♯ to kwinta zwiększona, a C–A♭
+       (ten sam pc) to seksta, czyli I przewrót tercji. Kwarta i seksta nie są
+       osobnymi jakościami — to przewroty kwinty / tercji (jak w triadach).
+       Nazwy: „C5" (power chord), „C°5" / „C+5" (kwinta zmn./zw.), „C(no5)" /
+       „Cm(no5)" (tercja = triada bez kwinty, zapis z chord chartów). — */
+  const DYAD_QUALITIES = {
+    p5: { intervals: [0, 7], step: 4, suffix: '5',      label: 'kwinta czysta (power chord)' },
+    d5: { intervals: [0, 6], step: 4, suffix: '°5',     label: 'kwinta zmniejszona' },
+    a5: { intervals: [0, 8], step: 4, suffix: '+5',     label: 'kwinta zwiększona' },
+    M3: { intervals: [0, 4], step: 2, suffix: '(no5)',  label: 'tercja wielka' },
+    m3: { intervals: [0, 3], step: 2, suffix: 'm(no5)', label: 'tercja mała' },
+  };
+  // typ akordu sterujący całą aplikacją: triada albo diada danej rodziny;
+  // `size` = liczba głosów (dobór zestawów strun i przewrotów), `family` = który
+  // składnik triady zostaje obok prymy ('fifth' → power chord, 'third' → tercja)
+  const CHORD_TYPES = {
+    triad: { label: 'triada (3 dźwięki)',            size: 3, family: null },
+    dyad5: { label: 'diada — kwinty (power chords)',  size: 2, family: 'fifth' },
+    dyad3: { label: 'diada — tercje',                 size: 2, family: 'third' },
+  };
+
   const mod12 = (n) => ((n % 12) + 12) % 12;
 
   // znormalizuj różnicę półtonów do zakresu -6..+5 (dla doboru znaku chromatycznego)
@@ -508,9 +532,58 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
     const pcs = iv.map((s) => mod12(r.pc + s));
     const names = pcs.map((pc, i) => spellPc(pc, letters[i]));
     return {
-      rootPc: r.pc, rootName: names[0], quality,
+      kind: 'triad', rootPc: r.pc, rootName: names[0], quality,
       pcs, names, name: names[0] + QUALITY_SUFFIX[quality],
     };
+  }
+
+  // diada z prymy i jakości — spelling drugiego dźwięku z litery kroku (kwinta/tercja)
+  function buildDyad(rootName, quality) {
+    const r = parseNote(rootName);
+    const q = DYAD_QUALITIES[quality];
+    if (!r || !q) return null;
+    const li = LETTERS.indexOf(r.letter);
+    const letters = [r.letter, LETTERS[(li + q.step) % 7]];
+    const pcs = q.intervals.map((st) => mod12(r.pc + st));
+    const names = pcs.map((pc, i) => spellPc(pc, letters[i]));
+    return {
+      kind: 'dyad', rootPc: r.pc, rootName: names[0], quality,
+      pcs, names, name: names[0] + q.suffix,
+    };
+  }
+
+  // jakość diady z interwału (półtony) w danej rodzinie; null = poza katalogiem
+  function dyadQualityFrom(semis, family) {
+    const step = family === 'third' ? 2 : 4;
+    for (const k of Object.keys(DYAD_QUALITIES)) {
+      const q = DYAD_QUALITIES[k];
+      if (q.step === step && q.intervals[1] === semis) return k;
+    }
+    return null;
+  }
+
+  // diada wyprowadzona z triady: pryma + kwinta ('fifth') albo pryma + tercja
+  // ('third'). Zachowuje stopień i zapis rzymski — funkcja harmoniczna zostaje,
+  // zmienia się tylko voicing (vii° w C-dur → B°5, ii → Dm(no5)).
+  function triadToDyad(chord, family = 'fifth') {
+    if (!chord || !Array.isArray(chord.pcs)) return null;
+    if (chord.pcs.length === 2) return chord;         // już diada
+    const fam = family === 'third' ? 'third' : 'fifth';
+    const idx = fam === 'third' ? 1 : 2;
+    const quality = dyadQualityFrom(mod12(chord.pcs[idx] - chord.pcs[0]), fam);
+    const d = quality ? buildDyad(chord.rootName, quality) : null;
+    if (!d) return null;
+    if (chord.degree !== undefined) d.degree = chord.degree;
+    if (chord.roman !== undefined) d.roman = chord.roman;
+    d.triadName = chord.name;                          // pełna nazwa akordu źródłowego
+    return d;
+  }
+
+  // akord w postaci wybranego typu (CHORD_TYPES): triada bez zmian, diada z triady
+  function chordForType(chord, type = 'triad') {
+    const t = CHORD_TYPES[type];
+    if (!t || !t.family) return chord;
+    return triadToDyad(chord, t.family);
   }
 
   /* — diatonika: triada na stopniu d = co druga nuta skali; jakość z realnych interwałów — */
@@ -577,13 +650,18 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
 
   /* === suggestion-engine.js — propozycje kolejnych akordów (czysta heurystyka) === */
   // kanoniczny zapis rzymski akordu względem toniki (ta sama konwencja co parser/diatonika)
+  // jakości diad mapują się na tę samą konwencję: tercja mała / kwinta zmniejszona
+  // → małe litery, °/+ dla kwinty zmniejszonej / zwiększonej; power chord (bez
+  // tercji) pisany wielkimi literami (I5 ≈ I)
+  const LOWER_QUALITIES = { min: 1, dim: 1, m3: 1, d5: 1 };
+  const ROMAN_SUFFIX = { dim: '°', aug: '+', d5: '°', a5: '+' };
   function canonicalRoman(chord, tonicPc) {
     const d = chord.degree - 1;
     const alt = centerDiff(chord.rootPc - mod12(tonicPc + MAJOR_STEPS[d]));
     const altStr = alt > 0 ? '#'.repeat(alt) : 'b'.repeat(-alt);
     let core = ROMAN_BASE[d];
-    if (chord.quality === 'min' || chord.quality === 'dim') core = core.toLowerCase();
-    return altStr + core + (chord.quality === 'dim' ? '°' : chord.quality === 'aug' ? '+' : '');
+    if (LOWER_QUALITIES[chord.quality]) core = core.toLowerCase();
+    return altStr + core + (ROMAN_SUFFIX[chord.quality] || '');
   }
 
   // tabele przejść funkcyjnych (wagi ręcznie skalibrowane, konwencja pop/rock)
@@ -734,7 +812,20 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
     },
   };
   const OPEN_MIDI = TUNINGS.standard.open;          // domyślny strój (zgodność wstecz)
-  const STRING_SETS = { '321': [3, 2, 1], '432': [4, 3, 2], '543': [5, 4, 3], '654': [6, 5, 4] };
+  const STRING_SETS = {
+    '321': [3, 2, 1], '432': [4, 3, 2], '543': [5, 4, 3], '654': [6, 5, 4],
+    // diady: pary sąsiednie (power chordy, tercje) i z przeskokiem struny
+    // (seksty / kwarty leżą wygodniej na 4‑2, 3‑1 niż na parach sąsiednich)
+    '21': [2, 1], '32': [3, 2], '43': [4, 3], '54': [5, 4], '65': [6, 5],
+    '31': [3, 1], '42': [4, 2], '53': [5, 3], '64': [6, 4],
+  };
+  // klucze zestawów dla liczby głosów, w kolejności do UI (klucze liczbowe
+  // obiektu JS sortują się same, więc kolejność trzymamy jawnie)
+  const STRING_SET_ORDER = {
+    3: ['321', '432', '543', '654'],
+    2: ['21', '32', '43', '54', '65', '31', '42', '53', '64'],
+  };
+  function stringSetsFor(size) { return (STRING_SET_ORDER[size] || []).slice(); }
   const STRING_NAMES = TUNINGS.standard.names;
 
   function fretsForPc(stringNum, pc, minFret, maxFret, openMidi = OPEN_MIDI) {
@@ -748,33 +839,45 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
 
   /* === triad-generator.js === */
   const INVERSIONS = { root: [0, 1, 2], inv1: [1, 2, 0], inv2: [2, 0, 1] };
+  const DYAD_INVERSIONS = { root: [0, 1], inv1: [1, 0] };   // diada ma jeden przewrót
   const INVERSION_NAME = { root: 'pozycja zasadnicza', inv1: 'I przewrót', inv2: 'II przewrót' };
+  function inversionsFor(size) { return size === 2 ? DYAD_INVERSIONS : INVERSIONS; }
 
+  // Generator N-głosowy (N = liczba składników akordu: 3 dla triady, 2 dla diady).
+  // Zestaw strun musi mieć tyle strun, ile akord głosów — inaczej pusta lista,
+  // nigdy wyjątek (UI filtruje zestawy po rozmiarze, link z URL może się mylić).
   function voicingsForChord(chord, setKey, opts = {}) {
     const { minFret = 0, maxFret = 15, inversionFilter = 'all', tuning = 'standard' } = opts;
     const set = STRING_SETS[setKey];
     const tun = TUNINGS[tuning];
-    if (!set || !chord || !tun) return [];
+    if (!set || !chord || !Array.isArray(chord.pcs) || !tun) return [];
+    const n = chord.pcs.length;
+    if (set.length !== n) return [];
     const open = tun.open;
-    const invs = inversionFilter === 'all' ? Object.keys(INVERSIONS) : [inversionFilter];
+    const table = inversionsFor(n);
+    const invs = inversionFilter === 'all' ? Object.keys(table)
+      : (table[inversionFilter] ? [inversionFilter] : []);
     const out = [];
     for (const inv of invs) {
-      const order = INVERSIONS[inv];
+      const order = table[inv];
       const pcsOrd = order.map((i) => chord.pcs[i]);
       const namesOrd = order.map((i) => chord.names[i]);
       const perString = set.map((s, i) => fretsForPc(s, pcsOrd[i], minFret, maxFret, open));
-      for (const f0 of perString[0]) for (const f1 of perString[1]) for (const f2 of perString[2]) {
-        const midis = [open[set[0]] + f0, open[set[1]] + f1, open[set[2]] + f2];
-        if (!(midis[0] < midis[1] && midis[1] < midis[2])) continue;       // głosy rosnące
-        if (midis[2] - midis[0] >= 12) continue;                            // pozycja zamknięta
-        const frets = [f0, f1, f2];
+      const frets = [];
+      const walk = (i) => {                             // iloczyn kartezjański progów per struna
+        if (i < n) { for (const f of perString[i]) { frets[i] = f; walk(i + 1); } return; }
+        const midis = frets.map((f, k) => open[set[k]] + f);
+        for (let k = 1; k < n; k++) if (!(midis[k - 1] < midis[k])) return;   // głosy rosnące
+        if (midis[n - 1] - midis[0] >= 12) return;                            // pozycja zamknięta
+        const fr = frets.slice();
         out.push({
           inversion: inv, inversionName: INVERSION_NAME[inv],
           stringSet: setKey, strings: set.slice(), tuning,
-          frets, midis, noteNames: namesOrd.slice(),
-          position: (f0 + f1 + f2) / 3, minFret: Math.min(f0, f1, f2),
+          frets: fr, midis, noteNames: namesOrd.slice(),
+          position: fr.reduce((a, b) => a + b, 0) / n, minFret: Math.min.apply(null, fr),
         });
-      }
+      };
+      walk(0);
     }
     out.sort((a, b) => a.minFret - b.minFret || a.position - b.position);
     return out;
@@ -783,7 +886,8 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
   /* === progression-engine.js — minimal voice leading (DP/Viterbi) === */
   function transitionCost(a, b) {
     let c = 0;
-    for (let i = 0; i < 3; i++) c += Math.abs(a.frets[i] - b.frets[i]);
+    const n = Math.min(a.frets.length, b.frets.length);
+    for (let i = 0; i < n; i++) c += Math.abs(a.frets[i] - b.frets[i]);
     c += 0.5 * Math.max(0, Math.abs(a.position - b.position) - 3);
     return c;
   }
@@ -880,15 +984,18 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
     })) },
   };
 
-  // Zdarzenia jednego akordu wg wzorca. Każde zdarzenie niesie `voice` (0..2)
+  // Zdarzenia jednego akordu wg wzorca. Każde zdarzenie niesie `voice` (0..n−1)
   // i `chord` (indeks akordu) — gryf-scena mapuje z nich strunę do poświaty,
-  // zamiast zakładać sztywne „3 zdarzenia na akord" (k % 3).
+  // zamiast zakładać sztywne „3 zdarzenia na akord" (k % 3). Wzorce są pisane
+  // dla 3 głosów; przy diadzie (n = 2) indeks głosu zawija się modulo n, więc
+  // arpeggio ballady gra bas–góra–bas–góra zamiast wskazywać nieistniejący głos.
   function patternEvents(voicing, opts = {}) {
     const { at = 0, bpm = 80, beatsPerChord = 4, strumGap = 0.04,
             pattern = 'whole', chord = 0 } = opts;
     const beat = 60 / bpm;
     const chordDur = beatsPerChord * beat;
     const def = PATTERNS[pattern] || PATTERNS.whole;   // nieznany wzorzec → whole
+    const n = voicing.midis.length;
     const ev = [];
     // klamra długości: nuta nie dłuższa niż takt (zgodność wstecz z whole) ani 2.2 s
     const noteDur = (len) => Math.min(len * beat * 0.95, chordDur * 0.95, 2.2);
@@ -899,9 +1006,10 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
     for (const stp of def.steps) {
       if (stp.beat >= beatsPerChord) continue;         // wzorzec nie wystaje poza akord
       const t0 = at + stp.beat * beat;
-      if (stp.type === 'voice') push(stp.voice, t0, stp.len, stp.vel);
+      if (stp.type === 'voice') push(stp.voice % n, t0, stp.len, stp.vel);
       else {
-        const order = stp.type === 'up' ? [2, 1, 0] : [0, 1, 2];
+        const order = [];
+        for (let v = 0; v < n; v++) order.push(stp.type === 'up' ? n - 1 - v : v);
         order.forEach((v, i) => push(v, t0 + i * strumGap, stp.len, stp.vel));
       }
     }
@@ -989,7 +1097,7 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
   function voiceMoves(voicings) {
     const out = [];
     for (let i = 1; i < voicings.length; i++) {
-      for (let v = 0; v < 3; v++) {
+      for (let v = 0; v < voicings[i].frets.length; v++) {
         out.push({
           fromChord: i - 1, toChord: i, voice: v, string: voicings[i].strings[v],
           fromFret: voicings[i - 1].frets[v], toFret: voicings[i].frets[v],
@@ -1024,8 +1132,8 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
 
     const mk = (a, b, inTrans, u) => ({
       chordIndex: a, nextIndex: b, inTransition: inTrans, u,
-      dots: [0, 1, 2].map((v) => {
-        const fa = voicings[a].frets[v], fb = voicings[b].frets[v];
+      dots: voicings[a].frets.map((fa, v) => {
+        const fb = voicings[b].frets[v];
         const f = inTrans ? fa + (fb - fa) * u : fa;
         return { voice: v, string: voicings[a].strings[v],
                  fromFret: fa, toFret: fb, fret: f, open: !inTrans && fa === 0 };
@@ -1053,6 +1161,19 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
   // czysty > bemol > krzyżyk (interwał 6 półtonów → bV, spójnie z bemolową
   // konwencją korpusu); (3) litera nuty wynika ze stopnia (alteracja nie
   // zmienia litery) — stąd np. w C-dur zaznaczone A♭/G♯ pisze się A♭ (bVI).
+  // stopień dla prymy względem toniki: minimalna alteracja, przy remisie bemol;
+  // litera wynika ze stopnia (alteracja nie zmienia litery)
+  function nearestDegree(rootPc, tonic) {
+    const ctr = (x) => { const r = mod12(x); return r > 6 ? r - 12 : r; };
+    let best = null;
+    for (let d = 0; d < 7; d++) {
+      const alt = ctr(rootPc - tonic.pc - MAJOR_STEPS[d]);
+      const rank = Math.abs(alt) * 2 + (alt > 0 ? 1 : 0);
+      if (!best || rank < best.rank) best = { d, rank };
+    }
+    return { degree: best.d + 1, letter: LETTERS[(LETTERS.indexOf(tonic.letter) + best.d) % 7] };
+  }
+
   function recognizeTriad(midis, opts = {}) {
     const { key = 'C', scale = 'major' } = opts;
     if (!Array.isArray(midis) || midis.length !== 3) {
@@ -1080,17 +1201,9 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
       : matches.find((x) => x.root === bassPc) || matches[0];   // aug: pryma = bas
     const t = parseNote(key);
     if (!t) return { ok: false, reason: 'Nieznana tonacja.' };
-    // stopień względem toniki: minimalna alteracja, przy remisie bemol
-    const ctr = (x) => { const r = mod12(x); return r > 6 ? r - 12 : r; };
-    let best = null;
-    for (let d = 0; d < 7; d++) {
-      const alt = ctr(m.root - t.pc - MAJOR_STEPS[d]);
-      const rank = Math.abs(alt) * 2 + (alt > 0 ? 1 : 0);
-      if (!best || rank < best.rank) best = { d, rank };
-    }
-    const letter = LETTERS[(LETTERS.indexOf(t.letter) + best.d) % 7];
-    const chord = buildChord(spellPc(m.root, letter), m.q);
-    chord.degree = best.d + 1;
+    const deg = nearestDegree(m.root, t);
+    const chord = buildChord(spellPc(m.root, deg.letter), m.q);
+    chord.degree = deg.degree;
     chord.roman = canonicalRoman(chord, t.pc);
     // diatonika wybranego wariantu skali; jej zapis rzymski jest autorytatywny
     const dia = diatonicTriads(key, scale)
@@ -1108,12 +1221,78 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
     };
   }
 
+  /* — rozpoznawanie diad (dwa dźwięki) — */
+  // Interwał klas wysokości bas→góra i jego odczyty [jakość, przewrót].
+  // 4 i 8 półtonów są dwuznaczne (tercja wielka vs kwarta zmniejszona = przewrót
+  // kwinty zwiększonej; seksta mała = przewrót tercji wielkiej vs kwinta zwiększona),
+  // tryton (6) jest symetryczny (B–F = B°5 albo F°5/B): rozstrzyga diatonika
+  // tonacji (odczyt, którego triada jest w skali — F–B w C-dur to vii° w przewrocie),
+  // a przy braku rozstrzygnięcia pierwszy odczyt z listy: tercjowy (na gryfie
+  // częstszy niż kwinta zwiększona) i pryma = bas dla trytonu (jak aug w triadach).
+  const DYAD_READINGS = {
+    7: [['p5', 'root']], 5: [['p5', 'inv1']],
+    6: [['d5', 'root'], ['d5', 'inv1']],
+    4: [['M3', 'root'], ['a5', 'inv1']],
+    8: [['M3', 'inv1'], ['a5', 'root']],
+    3: [['m3', 'root']], 9: [['m3', 'inv1']],
+  };
+  const INTERVAL_PL = ['pryma', 'sekunda mała', 'sekunda wielka', 'tercja mała', 'tercja wielka',
+    'kwarta czysta', 'tryton', 'kwinta czysta', 'seksta mała', 'seksta wielka',
+    'septyma mała', 'septyma wielka'];
+
+  function recognizeDyad(midis, opts = {}) {
+    const { key = 'C', scale = 'major' } = opts;
+    if (!Array.isArray(midis) || midis.length !== 2) {
+      return { ok: false, reason: 'Potrzebuję dokładnie dwóch dźwięków.' };
+    }
+    const sorted = midis.slice().sort((a, b) => a - b);
+    const pcs = sorted.map(mod12);
+    if (pcs[0] === pcs[1]) {
+      return { ok: false, reason: 'Dźwięki się dublują (unison / oktawa) — diada potrzebuje dwóch różnych klas wysokości.' };
+    }
+    const semis = mod12(pcs[1] - pcs[0]);
+    const interval = { semis, label: INTERVAL_PL[semis] };
+    const t = parseNote(key);
+    if (!t) return { ok: false, reason: 'Nieznana tonacja.' };
+    const readings = DYAD_READINGS[semis];
+    if (!readings) {
+      return { ok: false, interval,
+        reason: `Interwał: ${interval.label} — to nie jest diada kwintowa ani tercjowa.` };
+    }
+    const dia = diatonicTriads(key, scale);
+    const cands = readings.map(([q, inv]) => {
+      const rootPc = inv === 'root' ? pcs[0] : pcs[1];
+      const deg = nearestDegree(rootPc, t);
+      const chord = buildDyad(spellPc(rootPc, deg.letter), q);
+      chord.degree = deg.degree;
+      chord.roman = canonicalRoman(chord, t.pc);
+      const fam = DYAD_QUALITIES[q].step === 4 ? 'fifth' : 'third';
+      const match = dia.find((c) => {
+        if (c.rootPc !== rootPc) return false;
+        const d = triadToDyad(c, fam);
+        return !!d && d.quality === q;
+      });
+      if (match) chord.roman = match.roman;           // zapis diatoniki jest autorytatywny
+      return { chord, quality: q, inversion: inv, diatonic: !!match };
+    });
+    const pick = cands.find((c) => c.diatonic) || cands[0];
+    const chord = pick.chord;
+    const noteNames = pcs.map((pc) => chord.names[chord.pcs.indexOf(pc)]);
+    return {
+      ok: true, chord, quality: pick.quality, rootPc: chord.rootPc,
+      bassPc: pcs[0], inversion: pick.inversion, inversionName: INVERSION_NAME[pick.inversion],
+      slashName: pick.inversion === 'root' ? chord.name : chord.name + '/' + noteNames[0],
+      noteNames, roman: chord.roman, diatonic: pick.diatonic, midis: sorted, interval,
+    };
+  }
+
   /* === share-state.js — stan aplikacji ⇄ fragment URL (czyste funkcje) === */
   // Format jak query string, ale we fragmencie: `#k=C&s=major&p=I-V-vi-IV…`.
   // Wartości są percent-encodowane — alterowane stopnie z `#` (np. `#iv°`)
   // nie ucinają fragmentu (RFC 3986: `#` nie może wystąpić wewnątrz fragmentu).
-  // Klucze: t strój · k tonacja · s skala · ss zestaw strun · inv przewroty ·
-  // f zakres progów "min-max" · p progresja · bpm · st tryb sceny.
+  // Klucze: t strój · k tonacja · s skala · ct typ akordu (triada / diada) ·
+  // ss zestaw strun · inv przewroty · f zakres progów "min-max" · p progresja ·
+  // bpm · pt wzorzec rytmiczny · st tryb sceny.
   // decode jest pobłażliwy: nieznane/zepsute pary pomija, liczby klamruje,
   // odwrócony zakres progów naprawia — śmieciowy hash nigdy nie wywraca UI.
   const SHARE_INV = ['all', 'root', 'inv1', 'inv2'];
@@ -1126,6 +1305,7 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
       kv.push(k + '=' + encodeURIComponent(String(v)));
     };
     put('t', st.tuning); put('k', st.key); put('s', st.scale);
+    if (st.ctype !== undefined && CHORD_TYPES[st.ctype]) put('ct', st.ctype);
     put('ss', st.set); put('inv', st.inv);
     if (st.fmin !== undefined || st.fmax !== undefined) {
       const a = clampInt(st.fmin !== undefined ? st.fmin : 0, 0, 22);
@@ -1154,6 +1334,7 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
       if (k === 't') { if (TUNINGS[v]) out.tuning = v; }
       else if (k === 'k') { if (parseNote(v)) out.key = v; }
       else if (k === 's') { if (SCALE_STEPS[v]) out.scale = v; }
+      else if (k === 'ct') { if (CHORD_TYPES[v]) out.ctype = v; }
       else if (k === 'ss') { if (STRING_SETS[v]) out.set = v; }
       else if (k === 'inv') { if (SHARE_INV.indexOf(v) >= 0) out.inv = v; }
       else if (k === 'f') {
@@ -1185,10 +1366,12 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
   return {
     LETTERS, NAT_PC, SCALE_STEPS, SCALE_LABEL, scaleLabel,
     QUALITY_INTERVALS, QUALITY_SUFFIX, OPEN_MIDI, STRING_SETS, STRING_NAMES, TUNINGS,
-    INVERSIONS, INVERSION_NAME, PRESETS,
+    INVERSIONS, DYAD_INVERSIONS, INVERSION_NAME, PRESETS,
+    DYAD_QUALITIES, CHORD_TYPES, stringSetsFor, inversionsFor,
     mod12, spellPc, parseNote, spellScale, qualityFrom, buildChord,
+    buildDyad, dyadQualityFrom, triadToDyad, chordForType,
     diatonicTriads, parseDegree, parseProgression, canonicalRoman, suggestNext,
-    fretsForPc, voicingsForChord, transitionCost, planProgression, recognizeTriad,
+    fretsForPc, voicingsForChord, transitionCost, planProgression, recognizeTriad, recognizeDyad,
     midiToFreq, strumEvents, progressionSchedule, metronomeEvents,
     PATTERNS, patternEvents, humanizeEvents,
     wireX, fretboardGeometry, voiceMoves, easeInOutCubic, transitionTime, animState,
@@ -1200,7 +1383,9 @@ body.stage-on #stage > *:nth-child(4) { animation-delay: 0.18s; }
 const Audio = (() => {
   let ctx = null, master = null;
   let verb = null, wet = null, wantVerb = true;        // pogłos: convolver + regulacja „wet"
-  const PAN = [-0.22, 0, 0.22];                        // bas lekko w lewo, sopran w prawo
+  // bas lekko w lewo, sopran w prawo — rozłożone równo po liczbie głosów
+  // (triada: −0.22 / 0 / +0.22, diada: −0.22 / +0.22)
+  const panOf = (voice, n) => (n > 1 ? -0.22 + (0.44 * voice) / (n - 1) : 0);
   const cache = new Map();           // freq(zaokr.) -> AudioBuffer
   let live = [];                     // aktywne źródła
   let timers = [];                   // timeouty UI/pętli
@@ -1324,7 +1509,7 @@ const Audio = (() => {
     ensure();
     const t0 = ctx.currentTime + 0.03;
     for (const e of Engine.strumEvents(voicing, { at: t0, strumGap: 0.045, duration: 1.6 }))
-      note(e.freq, e.time, e.dur, 0.5, PAN[e.voice] || 0);
+      note(e.freq, e.time, e.dur, 0.5, panOf(e.voice, voicing.midis.length));
     if (doneCb) later(doneCb, t0 + 1.7);
   }
 
@@ -1345,7 +1530,8 @@ const Audio = (() => {
       pattern: opts.pattern, humanize,
     });
     for (const e of sched.events)
-      note(e.freq, t0 + e.time, e.dur, 0.5 * (e.vel === undefined ? 1 : e.vel), PAN[e.voice] || 0);
+      note(e.freq, t0 + e.time, e.dur, 0.5 * (e.vel === undefined ? 1 : e.vel),
+           panOf(e.voice, voicings[e.chord].midis.length));
     if (opts.metronome) {
       const beats = voicings.length * opts.beatsPerChord;
       for (const m of Engine.metronomeEvents(beats, { bpm: opts.bpm, beatsPerBar: opts.beatsPerChord, at: 0 }))
@@ -1493,13 +1679,14 @@ const FretboardView = (() => {
                    'font-size': 12, 'text-anchor': 'middle' }, svg).textContent = names[s];
     }
 
-    // smugi (pod kropkami) + 3 kropki-głosy + etykiety nut
+    // smugi (pod kropkami) + kropki-głosy (3 dla triady, 2 dla diady) + etykiety nut
+    const nVoices = voicings[0].frets.length;
     trailEls = []; dotEls = []; lblEls = [];
-    for (let v = 0; v < 3; v++) {
+    for (let v = 0; v < nVoices; v++) {
       trailEls.push(el('line', { stroke: AMBER, 'stroke-width': 5,
                                  'stroke-linecap': 'round', opacity: 0 }, svg));
     }
-    for (let v = 0; v < 3; v++) {
+    for (let v = 0; v < nVoices; v++) {
       dotEls.push(el('circle', { r: 9, fill: AMBER }, svg));
       lblEls.push(el('text', { fill: DARK, 'font-size': 9, 'font-weight': 700,
                                'text-anchor': 'middle' }, svg));
@@ -1580,10 +1767,11 @@ const FretboardView = (() => {
     // ten sam wzorzec co w audio → poświata struny dokładnie tam, gdzie strum;
     // świadomie bez humanizacji (±8 ms poniżej progu percepcji wzrokowej)
     sched = Engine.progressionSchedule(voicings, { bpm: opt.bpm, beatsPerChord: 4, pattern: opt.pattern });
+    const nV = voicings[0].frets.length;
     strums = sched.events.map((e, k) => ({
       time: e.time,
-      string: voicings[e.chord !== undefined ? e.chord : Math.floor(k / 3)]
-        .strings[e.voice !== undefined ? e.voice : k % 3],
+      string: voicings[e.chord !== undefined ? e.chord : Math.floor(k / nV)]
+        .strings[e.voice !== undefined ? e.voice : k % nV],
     }));
     lastT = -1e9; glow = {}; vib = {};
     raf = requestAnimationFrame(tick);
@@ -1663,9 +1851,10 @@ const FretboardView = (() => {
 
 /* === fretboard-explorer.js — gryf jako instrument (zakładka Gryf) ===
    Warstwa brudna (SVG + zdarzenia klików). Cała matematyka pochodzi z silnika:
-   geo.hitTest mapuje piksel → (struna, próg), recognizeTriad nazywa zaznaczone
-   dźwięki. Selekcja: jeden dźwięk na strunę, maks. 3 (czwarty klik wypycha
-   najstarszy — FIFO sprzyja eksploracji), klik w zaznaczone pole odznacza. */
+   geo.hitTest mapuje piksel → (struna, próg), recognizeTriad / recognizeDyad
+   nazywa zaznaczone dźwięki. Selekcja: jeden dźwięk na strunę, maks. tyle, ile
+   głosów ma wybrany typ akordu (3 dla triady, 2 dla diady); klik ponad limit
+   wypycha najstarszy (FIFO sprzyja eksploracji), klik w zaznaczone pole odznacza. */
 const FretboardExplorer = (() => {
   const NS = 'http://www.w3.org/2000/svg';
   const AMBER = '#e8a33c', DARK = '#1d1407';
@@ -1685,6 +1874,7 @@ const FretboardExplorer = (() => {
   const openMidi = () => Engine.TUNINGS[state.tuning].open;
   const midiOf = (n) => openMidi()[n.string] + n.fret;
   const sortedMidis = () => sel.map(midiOf).sort((a, b) => a - b);
+  const need = () => Engine.CHORD_TYPES[state.ctype].size;   // ile dźwięków rozpoznajemy
 
   function windowRange() {
     const lo = Math.max(0, state.fmin);
@@ -1699,7 +1889,9 @@ const FretboardExplorer = (() => {
     const names = Engine.TUNINGS[state.tuning].names;
     const yTop = geo.stringY(1) - 16, yBot = geo.stringY(6) + 16;
     svg = el('svg', { viewBox: `0 0 ${geo.width} ${geo.height}`, role: 'img',
-                      'aria-label': 'klikalny gryf — zaznacz trzy dźwięki, żeby rozpoznać triadę' });
+                      'aria-label': need() === 2
+                        ? 'klikalny gryf — zaznacz dwa dźwięki, żeby rozpoznać diadę'
+                        : 'klikalny gryf — zaznacz trzy dźwięki, żeby rozpoznać triadę' });
 
     const defs = el('defs', {}, svg);
     const grad = el('linearGradient', { id: 'wood-ex', x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
@@ -1742,9 +1934,11 @@ const FretboardExplorer = (() => {
     svg.addEventListener('click', onClick);
     box.appendChild(svg);
 
-    // okno/strój mogły się zmienić — wytnij dźwięki spoza nowego okna
+    // okno/strój mogły się zmienić — wytnij dźwięki spoza nowego okna;
+    // typ akordu mógł zmaleć (triada → diada) — zostaw najnowsze dźwięki
     sel = sel.filter((n) => (n.fret === 0 ? geo.hasNut
       : n.fret > geo.leftWire && n.fret <= geo.rightWire));
+    while (sel.length > need()) sel.shift();
     update();
   }
 
@@ -1787,7 +1981,7 @@ const FretboardExplorer = (() => {
       const onString = sel.findIndex((n) => n.string === hit.string);
       if (onString >= 0) sel.splice(onString, 1);      // struna gra jeden dźwięk
       sel.push(hit);
-      while (sel.length > 3) sel.shift();              // FIFO
+      while (sel.length > need()) sel.shift();         // FIFO
       try { Audio.playNote(midiOf(hit)); } catch (e) { /* brak Web Audio (np. testy) */ }
     }
     update();
@@ -1799,8 +1993,10 @@ const FretboardExplorer = (() => {
   }
 
   function update() {
-    const res = sel.length === 3
-      ? Engine.recognizeTriad(sortedMidis(), { key: state.key, scale: state.scale })
+    const n = need();
+    const rec = n === 2 ? Engine.recognizeDyad : Engine.recognizeTriad;
+    const res = sel.length === n
+      ? rec(sortedMidis(), { key: state.key, scale: state.scale })
       : null;
     drawSelection(res);
     renderResult(res);
@@ -1839,21 +2035,27 @@ const FretboardExplorer = (() => {
     out.innerHTML = '';
     byId('ex-play').disabled = sel.length === 0;
     byId('ex-clear').disabled = sel.length === 0;
-    if (sel.length < 3) {
-      const left = 3 - sel.length;
+    const n = need();
+    if (sel.length < n) {
+      const left = n - sel.length;
       hint.textContent = sel.length === 0
-        ? 'Klikaj pola na gryfie (także struny puste przed siodełkiem) — trzy dźwięki na trzech strunach, a powiem Ci, co to za triada.'
-        : `Jeszcze ${left === 1 ? 'jeden dźwięk' : left + ' dźwięki'}… (czwarty klik wypycha najstarszy, klik w zaznaczone pole odznacza)`;
+        ? (n === 2
+          ? 'Klikaj pola na gryfie (także struny puste przed siodełkiem) — dwa dźwięki na dwóch strunach, a powiem Ci, co to za diada (power chord, tercja albo ich przewrót).'
+          : 'Klikaj pola na gryfie (także struny puste przed siodełkiem) — trzy dźwięki na trzech strunach, a powiem Ci, co to za triada.')
+        : `Jeszcze ${left === 1 ? 'jeden dźwięk' : left + ' dźwięki'}… (${n === 2 ? 'trzeci' : 'czwarty'} klik wypycha najstarszy, klik w zaznaczone pole odznacza)`;
       return;
     }
     if (!res.ok) { hint.textContent = res.reason; return; }
     hint.textContent = '';
+    const sub = res.chord.kind === 'dyad'
+      ? `diada: ${Engine.DYAD_QUALITIES[res.quality].label} · brzmi jako ${res.interval.label} · ${res.inversionName}`
+      : `triada ${QUAL_PL[res.quality]} · ${res.inversionName}`;
     const card = document.createElement('div');
     card.className = 'card ex-card';
     card.innerHTML = `
       <div class="row">
         <div><h3>${res.slashName}</h3>
-          <div class="sub">triada ${QUAL_PL[res.quality]} · ${res.inversionName}</div></div>
+          <div class="sub">${sub}</div></div>
         <span class="ex-badge${res.diatonic ? '' : ' borrow'}">${res.roman}${res.diatonic ? '' : ' · zapożyczenie'}</span>
       </div>
       <div class="notes">bas→sopran: <b>${res.noteNames.join(' – ')}</b></div>
@@ -1883,11 +2085,16 @@ window.FretboardExplorer = FretboardExplorer;          // dostęp programistyczn
 const $ = (s) => document.querySelector(s);
 const KEYS = ['C', 'G', 'D', 'A', 'E', 'B', 'F#', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
 
+const TRIAD_QUAL = [['maj', 'dur'], ['min', 'moll'], ['dim', 'zmniejszony'], ['aug', 'zwiększony']];
+
 const state = {
   tuning: 'standard',
   key: 'C', scale: 'major', set: '321', inv: 'all',
   fmin: 0, fmax: 12,
-  croot: 'C', cqual: 'maj',
+  ctype: 'triad',             // typ akordu (Engine.CHORD_TYPES): triada / diada kwintowa / diada tercjowa
+  setBySize: { 3: '321', 2: '65' },   // ostatni zestaw strun per liczba głosów
+  croot: 'C', cqual: 'maj',   // zakładka Akord: jakość triady…
+  dqual: 'p5',                // …i jakość diady (Engine.DYAD_QUALITIES)
   selDegree: 0,
   pattern: 'whole',           // wzorzec rytmiczny odtwarzania
   plan: null,                 // wynik planProgression
@@ -1896,6 +2103,12 @@ const state = {
 
 function opts() { return { minFret: state.fmin, maxFret: state.fmax, inversionFilter: state.inv, tuning: state.tuning }; }
 function tNames(v) { return Engine.TUNINGS[(v && v.tuning) || state.tuning].names; }
+// typ akordu: diada to redukcja triady (pryma + kwinta albo pryma + tercja) —
+// parser, diatonika i propozycje pracują na triadach, a `forType` zamienia je
+// na wybrany typ tuż przed generowaniem voicingów (stopień i zapis rzymski zostają)
+function chordSize() { return Engine.CHORD_TYPES[state.ctype].size; }
+function isDyad() { return chordSize() === 2; }
+function forType(chord) { return Engine.chordForType(chord, state.ctype); }
 
 /* — diagram gryfu (SVG): 6 strun pionowo, okno 5 progów, bursztynowe kropki — */
 function diagramSVG(v) {
@@ -1963,7 +2176,7 @@ function voicingCard(v, title) {
 
 /* — zakładka Akord — */
 function renderChordTab() {
-  const ch = Engine.buildChord(state.croot, state.cqual);
+  const ch = isDyad() ? Engine.buildDyad(state.croot, state.dqual) : Engine.buildChord(state.croot, state.cqual);
   const box = $('#chord-cards');
   box.innerHTML = '';
   const vs = Engine.voicingsForChord(ch, state.set, opts());
@@ -1973,7 +2186,7 @@ function renderChordTab() {
 
 /* — zakładka Diatonika — */
 function renderDiatonics() {
-  const tri = Engine.diatonicTriads(state.key, state.scale);
+  const tri = Engine.diatonicTriads(state.key, state.scale).map(forType);
   const box = $('#dia-degrees');
   box.innerHTML = '';
   tri.forEach((c, i) => {
@@ -2001,21 +2214,22 @@ function generate() {
   out.innerHTML = '';
   const parsed = Engine.parseProgression($('#progtext').value, state.key);
   if (!parsed.ok) { out.innerHTML = `<p class="error">${parsed.error}</p>`; state.plan = null; FretboardView.clear(); if (stageOn) stageInfoReset(); updateSuggestions(); return; }
-  const plan = Engine.planProgression(parsed.chords, state.set, opts());
+  const chords = parsed.chords.map(forType);           // triady → wybrany typ (np. power chordy)
+  const plan = Engine.planProgression(chords, state.set, opts());
   if (!plan.ok) {
-    out.innerHTML = `<p class="error">Brak voicingów dla akordu <b>${plan.chord.name}</b> (stopień ${parsed.chords[plan.failedIndex].roman}) w progach ${state.fmin}–${state.fmax}. Poszerz zakres progów.</p>`;
+    out.innerHTML = `<p class="error">Brak voicingów dla akordu <b>${plan.chord.name}</b> (stopień ${chords[plan.failedIndex].roman}) w progach ${state.fmin}–${state.fmax}. Poszerz zakres progów.</p>`;
     state.plan = null; FretboardView.clear(); if (stageOn) stageInfoReset(); updateSuggestions(); return;
   }
   if (Audio.playing) { Audio.stop(); }                 // nowy plan = nowa scena
-  state.plan = plan; state.planChords = parsed.chords;
-  FretboardView.build(plan, parsed.chords);
+  state.plan = plan; state.planChords = chords;
+  FretboardView.build(plan, chords);
   if (stageOn) stageProgText();
   syncHashIfLive();
 
   const flow = document.createElement('div');
   flow.className = 'flow';
   plan.voicings.forEach((v, i) => {
-    const c = voicingCard(v, `${parsed.chords[i].roman} · ${parsed.chords[i].name}`);
+    const c = voicingCard(v, `${chords[i].roman} · ${chords[i].name}`);
     c.dataset.idx = i;
     c.addEventListener('mouseenter', () => FretboardView.preview(i));
     c.addEventListener('mouseleave', () => FretboardView.rest());
@@ -2033,19 +2247,21 @@ function generate() {
 
   const pre = document.createElement('pre');
   pre.className = 'tabtxt fulltab';
-  pre.textContent = fullTab(plan.voicings, parsed.chords);
+  pre.textContent = fullTab(plan.voicings, chords);
   out.appendChild(pre);
   updateSuggestions();
 }
 
 function fullTab(voicings, chords) {
-  const head = '   ' + chords.map((c) => c.name.padEnd(6)).join('');
+  // kolumna mieści najdłuższą nazwę (np. „Am(no5)"), minimum 6 znaków jak dotąd
+  const w = Math.max(6, ...chords.map((c) => c.name.length + 1));
+  const head = '   ' + chords.map((c) => c.name.padEnd(w)).join('');
   const nm = tNames(voicings[0]);
   const lines = [1, 2, 3, 4, 5, 6].map((s) => {
     let line = nm[s] + '|—';
     for (const v of voicings) {
       const i = v.strings.indexOf(s);
-      line += (i >= 0 ? String(v.frets[i]) : '—').padEnd(4, '—') + '——';
+      line += (i >= 0 ? String(v.frets[i]) : '—').padEnd(w - 2, '—') + '——';
     }
     return line + '|';
   });
@@ -2071,33 +2287,35 @@ function updateSuggestions() {
 }
 
 function suggestionChip(s) {
+  const name = forType(s.chord).name;                  // nazwa w wybranym typie (np. G5)
   const chip = document.createElement('div');
   chip.className = 'schip';
   chip.title = s.reasons.join(' · ');
   const add = document.createElement('button');
   add.className = 'schip-add';
-  add.innerHTML = `<code>${s.roman}</code> · <b>${s.chord.name}</b>`;
-  add.setAttribute('aria-label', `Dopisz ${s.roman} (${s.chord.name}) do progresji`);
+  add.innerHTML = `<code>${s.roman}</code> · <b>${name}</b>`;
+  add.setAttribute('aria-label', `Dopisz ${s.roman} (${name}) do progresji`);
   add.addEventListener('click', () => {
     const inp = $('#progtext');
     inp.value = inp.value.trim() ? inp.value.trim() + '-' + s.roman : s.roman;
     generate();
-    toast(`Dodano ${s.roman} · ${s.chord.name}`);
+    toast(`Dodano ${s.roman} · ${name}`);
   });
   const play = document.createElement('button');
   play.className = 'schip-play';
   play.textContent = '▶';
   play.title = 'Posłuchaj przejścia: ostatni akord → propozycja';
-  play.setAttribute('aria-label', `Posłuchaj przejścia do ${s.chord.name}`);
+  play.setAttribute('aria-label', `Posłuchaj przejścia do ${name}`);
   play.addEventListener('click', () => previewSuggestion(s, play));
   chip.append(add, play);
   return chip;
 }
 
 function previewSuggestion(s, btn) {
-  const candVs = Engine.voicingsForChord(s.chord, state.set, opts());
+  const target = forType(s.chord);
+  const candVs = Engine.voicingsForChord(target, state.set, opts());
   if (!candVs.length) {
-    toast(`Brak voicingów dla ${s.chord.name} w progach ${state.fmin}–${state.fmax}`);
+    toast(`Brak voicingów dla ${target.name} w progach ${state.fmin}–${state.fmax}`);
     return;
   }
   Audio.stop(); FretboardView.halt();
@@ -2205,8 +2423,8 @@ function exitStage() {
 
 /* — link do udostępniania (stan ⇄ fragment URL, silnik: share-state.js) — */
 function currentShare() {
-  return { tuning: state.tuning, key: state.key, scale: state.scale, set: state.set,
-           inv: state.inv, fmin: state.fmin, fmax: state.fmax,
+  return { tuning: state.tuning, key: state.key, scale: state.scale, ctype: state.ctype,
+           set: state.set, inv: state.inv, fmin: state.fmin, fmax: state.fmax,
            prog: $('#progtext').value.trim(), bpm: Number($('#bpm').value),
            pattern: state.pattern, stage: stageOn };
 }
@@ -2239,6 +2457,7 @@ function applySharedState() {
   if (dec.tuning) state.tuning = dec.tuning;
   if (dec.key && KEYS.indexOf(dec.key) >= 0) state.key = dec.key;   // tylko tonacje z selecta
   if (dec.scale) state.scale = dec.scale;
+  if (dec.ctype) { state.ctype = dec.ctype; state.dqual = defaultDyadQuality(); }
   if (dec.set) state.set = dec.set;
   if (dec.inv) state.inv = dec.inv;
   if (dec.pattern) state.pattern = dec.pattern;
@@ -2253,19 +2472,47 @@ function fillSelect(sel, items, val) {
 }
 function setLabels() {
   const nm = Engine.TUNINGS[state.tuning].names;
-  return Object.entries(Engine.STRING_SETS).map(([k, strs]) =>
-    [k, `${strs.join('\u2011')} (${strs.map((s) => nm[s]).join(' ')})`]);
+  return Engine.stringSetsFor(chordSize()).map((k) => {
+    const strs = Engine.STRING_SETS[k];
+    return [k, `${strs.join('\u2011')} (${strs.map((s) => nm[s]).join(' ')})`];
+  });
+}
+// domyślna jakość diady dla rodziny wybranego typu (kwinty → power chord, tercje → tercja wielka)
+function defaultDyadQuality() {
+  return Engine.CHORD_TYPES[state.ctype].family === 'third' ? 'M3' : 'p5';
+}
+// Typ akordu steruje zestawami strun (2 vs 3 struny), przewrotami (diada ma
+// tylko I przewrót) i listą jakości w zakładce Akord. Ostatni zestaw pamiętamy
+// per liczba głosów, więc przełączenie triada → diada → triada wraca do 3-2-1.
+function applyChordType() {
+  const size = chordSize();
+  const cur = Engine.STRING_SETS[state.set];
+  if (!cur || cur.length !== size) state.set = state.setBySize[size];
+  state.setBySize[size] = state.set;
+  fillSelect($('#set'), setLabels(), state.set);
+  const invOk = Object.keys(Engine.inversionsFor(size));
+  $('#inv').querySelectorAll('option').forEach((o) => {
+    const off = o.value !== 'all' && invOk.indexOf(o.value) < 0;
+    o.hidden = off; o.disabled = off;
+  });
+  if (state.inv !== 'all' && invOk.indexOf(state.inv) < 0) state.inv = 'all';
+  $('#inv').value = state.inv;
+  if (isDyad()) {
+    fillSelect($('#cqual'), Object.entries(Engine.DYAD_QUALITIES).map(([k, q]) => [k, q.label]), state.dqual);
+  } else {
+    fillSelect($('#cqual'), TRIAD_QUAL, state.cqual);
+  }
 }
 function init() {
   const shared = applySharedState();                   // stan z linka NAD domyślnymi (zwalidowany)
   fillSelect($('#tuning'), Object.entries(Engine.TUNINGS).map(([k, t]) => [k, t.label]), state.tuning);
-  fillSelect($('#set'), setLabels(), state.set);
+  fillSelect($('#ctype'), Object.entries(Engine.CHORD_TYPES).map(([k, t]) => [k, t.label]), state.ctype);
   fillSelect($('#key'), KEYS.map((k) => [k, k]), state.key);
   fillSelect($('#scale'), Object.keys(Engine.SCALE_STEPS).map((k) => [k, Engine.scaleLabel(k)]), state.scale);
   fillSelect($('#croot'), KEYS.map((k) => [k, k]), state.croot);
   fillSelect($('#pattern'), Object.entries(Engine.PATTERNS).map(([k, p]) => [k, p.label]), state.pattern);
   Audio.setReverb($('#reverb').checked);               // tylko preferencja — AudioContext powstaje przy 1. dźwięku
-  $('#inv').value = state.inv;
+  applyChordType();                                    // zestaw strun, przewroty i jakości zgodne z typem akordu
   $('#fmin').value = state.fmin; $('#fmax').value = state.fmax;
   if (shared.bpm) { $('#bpm').value = shared.bpm; $('#bpmval').textContent = shared.bpm + ' BPM'; }
   if (shared.prog) { $('#progtext').value = shared.prog; showPane('pane-prog'); }
@@ -2288,13 +2535,22 @@ function init() {
     rerender();
   });
   $('#key').addEventListener('change', (e) => { state.key = e.target.value; rerender(); });
+  $('#ctype').addEventListener('change', (e) => {
+    state.ctype = e.target.value;
+    state.dqual = defaultDyadQuality();
+    applyChordType();
+    rerender();
+  });
   $('#scale').addEventListener('change', (e) => { state.scale = e.target.value; renderDiatonics(); FretboardExplorer.rebuild(); updateSuggestions(); });
-  $('#set').addEventListener('change', (e) => { state.set = e.target.value; rerender(); });
+  $('#set').addEventListener('change', (e) => { state.set = e.target.value; state.setBySize[chordSize()] = state.set; rerender(); });
   $('#inv').addEventListener('change', (e) => { state.inv = e.target.value; rerender(); });
   $('#fmin').addEventListener('change', (e) => { state.fmin = Math.max(0, Number(e.target.value) || 0); rerender(); });
   $('#fmax').addEventListener('change', (e) => { state.fmax = Math.max(state.fmin, Number(e.target.value) || 12); rerender(); });
   $('#croot').addEventListener('change', (e) => { state.croot = e.target.value; renderChordTab(); });
-  $('#cqual').addEventListener('change', (e) => { state.cqual = e.target.value; renderChordTab(); });
+  $('#cqual').addEventListener('change', (e) => {
+    if (isDyad()) state.dqual = e.target.value; else state.cqual = e.target.value;
+    renderChordTab();
+  });
 
   $('#gen').addEventListener('click', generate);
   $('#progtext').addEventListener('keydown', (e) => { if (e.key === 'Enter') generate(); });
